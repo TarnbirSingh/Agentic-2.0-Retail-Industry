@@ -152,6 +152,7 @@ class NegotiationConfig:
     llm_config: LLMConfig = field(default_factory=LLMConfig)
     experiment_id: str = "experiment_001"
     log_level: str = "INFO"
+    use_coder_agent: bool = True               # Agentic 2.0: delegate arithmetic to CoderAgent
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -217,3 +218,10 @@ def setup_logging(level: str = "INFO") -> None:
         datefmt=LOG_DATE_FORMAT,
         force=True,
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL SETTINGS INSTANCE (for easy import)
+# ─────────────────────────────────────────────────────────────────────────────
+
+settings = AICoreSettings()

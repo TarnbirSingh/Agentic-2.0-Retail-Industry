@@ -1,269 +1,310 @@
 """
 models/negotiation_models.py
 ────────────────────────────
-Core Pydantic data models for the negotiation framework.
+Simplified negotiation models for agent-to-agent B2B negotiations.
 
-These models are the single source of truth for the data structures
-exchanged between agents, the orchestrator, the validator, and the
-KPI tracker.
-
-All models use Pydantic v2 syntax.  They are strictly typed, validated
-on construction, and serialisable to/from JSON.
-
-Model hierarchy
----------------
-  NegotiationOffer    – one offer from one agent in one round
-  RoundRecord         – wraps an offer with metadata (round, role, validity)
-  NegotiationState    – the full running state passed through the system
-  AgentRole           – enum identifying which party generated an offer
+Core entities:
+- NegotiationOffer: Single offer in a negotiation round
+- NegotiationRound: Complete round with offer + validation
+- NegotiationSession: Full negotiation state
+- NegotiationResult: Final outcome
 """
 
-import datetime
+from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+# Import utility models for multi-attribute negotiation
+try:
+    from models.utility import AttributeWeights, NegotiationPreferences
+except ImportError:
+    # Fallback if utility.py not loaded yet
+    AttributeWeights = None
+    NegotiationPreferences = None
 
+# Import agent reasoning models for transparency
+try:
+    from models.agent_reasoning import AgentReasoning
+except ImportError:
+    # Fallback if agent_reasoning.py not loaded yet
+    AgentReasoning = None
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ENUMERATIONS
-# ─────────────────────────────────────────────────────────────────────────────
 
 class AgentRole(str, Enum):
-    """Identifies which party is making an offer."""
+    """Who is making the offer."""
     SUPPLIER = "supplier"
-    RETAIL   = "retail"
+    RETAILER = "retailer"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CORE OFFER MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+class SessionStatus(str, Enum):
+    """Current state of the negotiation."""
+    # New flow states
+    REQUEST_CREATED = "request_created"  # Retailer created request
+    PRODUCTS_MATCHED = "products_matched"  # Agent matched products for supplier
+    OFFER_SENT = "offer_sent"  # Supplier sent offer to retailer
+    CONSTRAINTS_SET = "constraints_set"  # Retailer set negotiation constraints
+    ZOPA_CHECK = "zopa_check"  # Checking if ZOPA exists
+    
+    # Old flow states (kept for compatibility)
+    PENDING_LIMITS = "pending_limits"  # Waiting for counterparty to set limits
+    NO_ZOPA = "no_zopa"  # No zone of possible agreement
+    NEGOTIATING = "negotiating"  # Agents are negotiating autonomously
+    PENDING_APPROVAL = "pending_approval"  # Final offer needs human approval
+    ACCEPTED = "accepted"  # Deal accepted by both parties
+    REJECTED = "rejected"  # Deal rejected
+    FAILED = "failed"  # Technical failure
+    MAX_ROUNDS = "max_rounds_reached"  # No agreement after max rounds
+    
+    # NEW: HITL & Renegotiate states
+    HITL_REQUIRED = "hitl_required"  # Human intervention required (ZOPA breach, etc.)
+    PAUSED = "paused"  # Human paused negotiation to review
+    RENEGOTIATING = "renegotiating"  # Restarting negotiation with new constraints after rejection
+
 
 class NegotiationOffer(BaseModel):
-    """
-    Structured representation of a single negotiation offer.
-
-    This is the *primary output type* for both agents.  The LLM must
-    produce a JSON object that validates against this schema.  Any
-    offer that does not parse into this model is rejected before it
-    ever reaches the validation layer.
-
-    Fields
-    ------
-    unit_price      : Proposed price per unit in EUR (must be > 0).
-    volume          : Proposed order volume in units (must be > 0).
-    delivery_window : Proposed delivery window, e.g. "Q3" or "Q4".
-    payment_terms   : Payment terms, e.g. "Net30", "Net60".
-    justification   : Business reasoning.  At least 10 characters.
-    """
-
-    unit_price: float = Field(
-        ...,
-        gt=0,
-        description="Proposed unit price in EUR.",
-    )
-    volume: int = Field(
-        ...,
-        gt=0,
-        description="Proposed order volume in units.",
-    )
-    delivery_window: str = Field(
-        ...,
-        min_length=1,
-        description="Delivery window identifier, e.g. 'Q3', 'Q4'.",
-    )
-    payment_terms: str = Field(
-        ...,
-        min_length=1,
-        description="Payment terms, e.g. 'Net30', 'Net60'.",
-    )
-    justification: str = Field(
-        ...,
-        min_length=10,
-        description="Business justification for this offer (≥10 chars).",
-    )
-
-    # ── Validators ────────────────────────────────────────────────────────────
-
-    @field_validator("delivery_window")
-    @classmethod
-    def normalise_delivery_window(cls, v: str) -> str:
-        """Strip whitespace and upper-case for consistent comparison."""
-        return v.strip().upper()
-
-    @field_validator("payment_terms")
-    @classmethod
-    def normalise_payment_terms(cls, v: str) -> str:
-        return v.strip()
-
-    @field_validator("justification")
-    @classmethod
-    def strip_justification(cls, v: str) -> str:
-        stripped = v.strip()
-        if len(stripped) < 10:
-            raise ValueError("justification must be at least 10 characters")
-        return stripped
-
-    @field_validator("unit_price")
-    @classmethod
-    def round_unit_price(cls, v: float) -> float:
-        """Round to 4 decimal places to avoid floating-point noise."""
-        return round(v, 4)
-
-    # ── Computed properties ───────────────────────────────────────────────────
-
-    @property
-    def total_value(self) -> float:
-        """Total contract value (unit_price × volume) in EUR."""
-        return round(self.unit_price * self.volume, 2)
-
-    # ── Serialisation helpers ─────────────────────────────────────────────────
-
-    def to_log_dict(self) -> dict:
-        """
-        Compact dict suitable for logging and JSON export.
-        Adds the computed ``total_value`` field.
-        """
-        return {
-            "unit_price":       self.unit_price,
-            "volume":           self.volume,
-            "delivery_window":  self.delivery_window,
-            "payment_terms":    self.payment_terms,
-            "justification":    self.justification,
-            "total_value":      self.total_value,
-        }
-
-    def to_prompt_str(self) -> str:
-        """
-        Human-readable one-line summary for injection into LLM prompts.
-        Keeps prompt tokens minimal.
-        """
-        return (
-            f"unit_price={self.unit_price} EUR, "
-            f"volume={self.volume}, "
-            f"delivery_window={self.delivery_window}, "
-            f"payment_terms={self.payment_terms}"
-        )
+    """Single offer in a negotiation round."""
+    unit_price: float = Field(..., description="Price per unit in EUR")
+    volume: int = Field(..., description="Number of units")
+    delivery_days: int = Field(..., description="Delivery lead time in days")
+    payment_terms: str = Field(..., description="Payment terms (e.g., 'Net 30')")
+    justification: str = Field(default="", description="Agent's reasoning for this offer")
+    leverage_used: Optional[str] = Field(default=None, description="Negotiation leverage used (e.g., 'volume discount', 'fast delivery')")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ROUND RECORD  (offer + metadata)
-# ─────────────────────────────────────────────────────────────────────────────
-
-class RoundRecord(BaseModel):
-    """
-    Immutable record of a single negotiation round.
-
-    Wraps a ``NegotiationOffer`` with round metadata so the full
-    negotiation history can be replayed or exported for analysis.
-
-    Fields
-    ------
-    round_number        : 1-based round counter.
-    role                : Which agent produced this offer.
-    offer               : The actual offer.
-    is_valid            : Whether the offer passed validation.
-    validation_message  : Error detail if ``is_valid`` is False, else "".
-    timestamp           : ISO-8601 creation timestamp (UTC).
-    """
-
+class NegotiationRound(BaseModel):
+    """Complete round with offer and validation."""
     round_number: int
     role: AgentRole
     offer: NegotiationOffer
     is_valid: bool
     validation_message: str = ""
-    timestamp: str = Field(
-        default_factory=lambda: datetime.datetime.utcnow().isoformat()
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    
+    # Transparency: Agent's reasoning for this round (NEW - Agentic 2.0)
+    agent_reasoning: Optional[dict] = Field(
+        default=None,
+        description="Agent's complete reasoning data for transparency (AgentReasoning as dict)"
     )
 
-    def to_history_dict(self) -> dict:
-        """Compact representation for LLM context injection."""
-        return {
-            "round":            self.round_number,
-            "role":             self.role.value,
-            "unit_price":       self.offer.unit_price,
-            "volume":           self.offer.volume,
-            "delivery_window":  self.offer.delivery_window,
-            "payment_terms":    self.offer.payment_terms,
-            "justification":    self.offer.justification,
-            "valid":            self.is_valid,
-        }
+
+class PartyLimits(BaseModel):
+    """Constraints/limits set by one party."""
+    min_price: Optional[float] = None  # Supplier's floor price
+    max_price: Optional[float] = None  # Retailer's ceiling price
+    min_volume: Optional[int] = None
+    max_volume: Optional[int] = None
+    max_delivery_days: Optional[int] = None
+    acceptable_payment_terms: list[str] = Field(default_factory=list)
+    target_margin: Optional[float] = None  # Retailer's target margin (0-1)
+    retail_price: Optional[float] = None  # Retailer's planned retail price
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# NEGOTIATION STATE
-# ─────────────────────────────────────────────────────────────────────────────
-
-class NegotiationState(BaseModel):
-    """
-    Complete, mutable negotiation state.
-
-    Passed by reference through the orchestration loop.  Each round
-    appends a ``RoundRecord`` to ``history``.  All agents receive the
-    *same* state object – they must not mutate it directly.
-
-    The orchestrator is the *only* component that updates this object.
-
-    Fields
-    ------
-    current_round       : Round currently being executed (1-based).
-    history             : Ordered list of all past rounds.
-    is_agreement        : True once agreement conditions are met.
-    termination_reason  : Human-readable reason for termination.
-    """
-
+class NegotiationSession(BaseModel):
+    """Complete negotiation session state."""
+    session_id: str
+    product_id: str
+    product_name: str
+    
+    # Who initiated
+    initiator: AgentRole
+    
+    # Partner IDs (for filtering in multi-partner SaaS)
+    supplier_id: Optional[str] = None
+    retailer_id: Optional[str] = None
+    
+    # Initial offer/request
+    initial_offer: NegotiationOffer
+    
+    # Limits set by both parties
+    supplier_limits: Optional[PartyLimits] = None
+    retailer_limits: Optional[PartyLimits] = None
+    
+    # Multi-attribute preferences (NEW - for utility-based negotiation)
+    supplier_preferences: Optional[dict] = None  # NegotiationPreferences as dict
+    retailer_preferences: Optional[dict] = None  # NegotiationPreferences as dict
+    
+    # ZOPA analysis
+    zopa_min: Optional[float] = None  # Lowest acceptable price
+    zopa_max: Optional[float] = None  # Highest acceptable price
+    zopa_exists: bool = False
+    
+    # Negotiation history
+    rounds: list[NegotiationRound] = Field(default_factory=list)
     current_round: int = 0
-    history: List[RoundRecord] = Field(default_factory=list)
-    is_agreement: bool = False
-    termination_reason: Optional[str] = None
+    max_rounds: int = 50
+    
+    # Status
+    status: SessionStatus = SessionStatus.PENDING_LIMITS
+    status_message: str = ""
+    
+    # Approvals for final offer
+    supplier_approved: bool = False
+    retailer_approved: bool = False
+    
+    # Timestamps
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-    # ── Query helpers ─────────────────────────────────────────────────────────
 
-    def get_last_offer_by_role(self, role: AgentRole) -> Optional[NegotiationOffer]:
-        """
-        Return the most recent *valid* offer from a specific role.
+class ProductRequest(BaseModel):
+    """Retailer's product request (free-text input processed by agent)."""
+    request_id: str
+    retailer_id: str
+    retailer_name: str
+    
+    # Raw input from human
+    raw_request: str = Field(..., description="Free-text request from retailer")
+    
+    # Agent-structured fields
+    product_category: Optional[str] = None
+    estimated_volume: Optional[int] = None
+    timeframe: Optional[str] = None
+    special_requirements: Optional[str] = None
+    
+    # NEW: Extended structured fields extracted by LLM
+    product_description: Optional[str] = None  # More detailed product description
+    budget_range: Optional[str] = None  # e.g., "30-50€ pro Stück" or "EUR 25,000 total"
+    quality_tier: Optional[str] = None  # e.g., "Mittelklasse", "Premium", "Economy"
+    preferred_payment_terms: Optional[str] = None  # e.g., "Net30", "Net60", "Prepayment"
+    
+    # Agent enrichment
+    market_context: Optional[str] = None  # e.g., "Typical price range: 35-60€"
+    
+    # Matched products (filled after supplier agent processes)
+    matched_products: list[dict] = Field(default_factory=list)
+    
+    # Request routing (for multi-partner SaaS)
+    target_supplier_ids: Optional[list[str]] = None  # None = broadcast to all, or specific supplier IDs
+    
+    # Status
+    status: str = "pending_supplier"  # pending_supplier, products_matched, offer_created
+    
+    # Timestamps
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-        Only valid offers are considered; invalid ones are ignored so
-        that agents always respond to the last accepted position.
-        """
-        for record in reversed(self.history):
-            if record.role == role and record.is_valid:
-                return record.offer
-        return None
 
-    def get_last_offer(self) -> Optional[NegotiationOffer]:
-        """Return the most recent offer regardless of role or validity."""
-        return self.history[-1].offer if self.history else None
+class ProductMatch(BaseModel):
+    """A product matched by the supplier agent for a request."""
+    product_id: str
+    product_name: str
+    relevance_score: float = Field(..., description="How well product matches request (0-1)")
+    reasoning: str = Field(..., description="Agent's reasoning for the match")
+    
+    # Product details (from DB)
+    base_price: float
+    min_price: float
+    typical_retail_price: float
+    min_order_quantity: int
+    max_monthly_capacity: int
+    lead_time_days: int
+    default_payment_terms: str
 
-    def get_history_for_prompt(self, max_entries: int = 6) -> List[dict]:
-        """
-        Return a compact, JSON-serialisable history list for LLM prompts.
 
-        Only valid offers are included.  Limited to ``max_entries``
-        most-recent entries to keep token usage bounded.
-        """
-        valid_records = [r for r in self.history if r.is_valid]
-        recent = valid_records[-max_entries:]
-        return [r.to_history_dict() for r in reversed(recent)]  # newest first
+class ZOPAAnalysis(BaseModel):
+    """Analysis of Zone of Possible Agreement with recommendations."""
+    zopa_exists: bool
+    zopa_min: Optional[float] = None
+    zopa_max: Optional[float] = None
+    gap_amount: Optional[float] = None  # How much is missing if no ZOPA
+    
+    # Agent recommendations
+    recommendation: str = ""  # "Increase retailer max_price by 3€" or "Both parties adjust"
+    supplier_suggestion: Optional[str] = None  # Specific suggestion for supplier
+    retailer_suggestion: Optional[str] = None  # Specific suggestion for retailer
+    
+    # Alternative solutions
+    alternative_approaches: list[str] = Field(default_factory=list)  # e.g., ["Higher volume discount", "Extended payment terms"]
 
-    def get_price_gap(self) -> Optional[float]:
-        """
-        Return the absolute price gap between the last offers from each party.
 
-        Returns None if at least one side has not yet made a valid offer.
-        """
-        last_supplier = self.get_last_offer_by_role(AgentRole.SUPPLIER)
-        last_retail   = self.get_last_offer_by_role(AgentRole.RETAIL)
-        if last_supplier is None or last_retail is None:
-            return None
-        return abs(last_supplier.unit_price - last_retail.unit_price)
+class HITLTriggerReason(str, Enum):
+    """Why human intervention was triggered."""
+    ZOPA_BREACH = "zopa_breach"  # Agent tried to go outside ZOPA
+    LARGE_PRICE_JUMP = "large_price_jump"  # Price change >5% in one round
+    MAX_ROUNDS_APPROACHING = "max_rounds_approaching"  # Only 1-2 rounds left
+    NEGOTIATION_STALLED = "negotiation_stalled"  # No progress for 3+ rounds
+    AGENT_UNCERTAINTY = "agent_uncertainty"  # Agent confidence score too low
+    MANUAL_REVIEW = "manual_review"  # User explicitly requested pause
 
-    def to_summary_dict(self) -> dict:
-        """Compact summary for logging at round end."""
-        return {
-            "current_round":        self.current_round,
-            "is_agreement":         self.is_agreement,
-            "termination_reason":   self.termination_reason,
-            "rounds_recorded":      len(self.history),
-            "price_gap":            self.get_price_gap(),
-        }
+
+class HITLSeverity(str, Enum):
+    """How critical is the intervention."""
+    INFO = "info"  # FYI, can continue without intervention
+    WARNING = "warning"  # Recommended to review, but optional
+    CRITICAL = "critical"  # Must intervene, auto-pause negotiation
+
+
+class HITLTrigger(BaseModel):
+    """Details about why HITL was triggered."""
+    reason: HITLTriggerReason
+    severity: HITLSeverity
+    message: str = Field(..., description="Human-readable explanation")
+    recommended_action: str = Field(..., description="What human should do")
+
+    # Context data — always populate both party prices for clean UI display
+    current_price: Optional[float] = None       # last round's price (legacy, prefer below)
+    supplier_last_price: Optional[float] = None  # most recent supplier offer
+    retailer_last_price: Optional[float] = None  # most recent retailer offer
+    price_gap: Optional[float] = None            # abs diff between the two latest prices
+    zopa_min: Optional[float] = None
+    zopa_max: Optional[float] = None
+    rounds_remaining: Optional[int] = None
+
+
+class InterventionAction(str, Enum):
+    """What human wants to do when intervening."""
+    CONTINUE = "continue"  # Continue negotiation as-is
+    ADJUST_CONSTRAINTS = "adjust_constraints"  # Set new limits and continue
+    PAUSE = "pause"  # Pause for manual review
+    ABORT = "abort"  # Stop negotiation completely
+
+
+class InterventionRequest(BaseModel):
+    """Human intervention input."""
+    session_id: str
+    action: InterventionAction
+    new_limits: Optional[PartyLimits] = None  # If adjusting constraints
+    notes: Optional[str] = None  # Human's reasoning
+
+
+class RenegotiationContext(BaseModel):
+    """Context from previous negotiation for learning."""
+    previous_session_id: str
+    rejection_reason: str
+    final_offer_price: float
+    final_offer_terms: dict
+    rounds_completed: int
+    key_sticking_points: list[str] = Field(default_factory=list)  # e.g., ["price_too_high", "volume_too_low"]
+
+
+class RenegotiateRequest(BaseModel):
+    """Request to restart negotiation with new constraints."""
+    session_id: str
+    role: AgentRole  # Who is renegotiating
+    new_limits: PartyLimits
+    renegotiation_context: Optional[RenegotiationContext] = None
+
+
+class NegotiationResult(BaseModel):
+    """Final outcome of a negotiation."""
+    session_id: str
+    agreement_reached: bool
+    
+    # Final deal terms (if agreement reached)
+    final_price: Optional[float] = None
+    final_volume: Optional[int] = None
+    final_delivery_days: Optional[int] = None
+    final_payment_terms: Optional[str] = None
+    
+    # Metrics
+    total_rounds: int
+    runtime_seconds: float
+    price_movement: Optional[float] = None  # How much price changed from initial
+    
+    # Termination reason
+    termination_reason: str
+    
+    # KPIs
+    supplier_margin: Optional[float] = None  # If calculable
+    retailer_margin: Optional[float] = None  # If retail price known

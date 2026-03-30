@@ -1,0 +1,190 @@
+/**
+ * Phase 3: Live Negotiation & HITL Styles
+ * ────────────────────────────────────────
+ * Add these styles to App.css or import separately
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIVE NEGOTIATION CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.live-negotiation-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPAND BUTTON
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.btn-expand {
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-weight: 600;
+  color: #374151;
+}
+
+.btn-expand:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENHANCED STATUS BADGES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.status-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-negotiating {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-renegotiating {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-pending {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.status-hitl {
+  background: #ffebee;
+  color: #d32f2f;
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.status-paused {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.status-default {
+  background: #f5f5f5;
+  color: #616161;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTION BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.negotiation-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.negotiation-actions .btn {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPROVAL STATUS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.approval-status {
+  padding: 0.75rem;
+  background: #e8f5e9;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  color: #2e7d32;
+  margin-top: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .negotiation-actions {
+    flex-direction: column;
+  }
+  
+  .negotiation-actions .btn {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .live-negotiation-container {
+    padding: 0.75rem;
+  }
+}

@@ -31,11 +31,46 @@ Design notes
 
 import logging
 import os
+import sys
+import types
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
 from typing import Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
 logger = logging.getLogger(__name__)
+
+
+def _load_aicore_openai_adapter():
+    """
+    Load the SAP AI Core OpenAI LangChain adapter without importing the
+    package initializer that eagerly pulls in optional Vertex/AWS modules.
+    """
+    import gen_ai_hub
+
+    base_dir = Path(gen_ai_hub.__file__).resolve().parent / "proxy" / "langchain"
+    package_name = "_tradebridge_gen_ai_hub_langchain"
+
+    if package_name not in sys.modules:
+        package = types.ModuleType(package_name)
+        package.__path__ = [str(base_dir)]
+        sys.modules[package_name] = package
+
+    for module_name in ("base", "init_models", "openai"):
+        qualified_name = f"{package_name}.{module_name}"
+        if qualified_name in sys.modules:
+            continue
+
+        spec = spec_from_file_location(qualified_name, base_dir / f"{module_name}.py")
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load SAP AI Core adapter module: {module_name}")
+
+        module = module_from_spec(spec)
+        sys.modules[qualified_name] = module
+        spec.loader.exec_module(module)
+
+    return sys.modules[f"{package_name}.openai"].ChatOpenAI
 
 
 class AICoreClient:
@@ -107,6 +142,85 @@ class AICoreClient:
             deployment_id=self.deployment_id,
         )
 
+    def generate(
+        self,
+        messages: list[dict],
+        temperature: Optional[float] = None,
+    ) -> str:
+        """
+        Convenience wrapper: call the LLM with a list of message dicts.
+
+        Parameters
+        ----------
+        messages    : List of dicts with ``role`` (``"user"``/``"assistant"``)
+                      and ``content`` keys – the same shape used by the
+                      OpenAI Chat Completions API.
+        temperature : Optional override.  When given, a temporary client with
+                      that temperature is used without mutating ``self``.
+
+        Returns
+        -------
+        str – the LLM's text reply (``response.content``).
+        """
+        from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
+        # Build LangChain message objects
+        lc_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                lc_messages.append(SystemMessage(content=content))
+            elif role == "assistant":
+                lc_messages.append(AIMessage(content=content))
+            else:
+                lc_messages.append(HumanMessage(content=content))
+
+        # Use a temporary client if temperature override is requested
+        if temperature is not None and temperature != self.temperature:
+            client = self.with_temperature(temperature)
+            llm = client.get_llm()
+        else:
+            llm = self.get_llm()
+
+        response = llm.invoke(lc_messages)
+        return response.content
+
+    def generate_text(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+    ) -> str:
+        """
+        Convenience wrapper: call the LLM with a plain text prompt.
+
+        Parameters
+        ----------
+        prompt     : Plain-text prompt string (converted to a single
+                     ``HumanMessage`` internally).
+        max_tokens : Optional token cap override for this single call.
+                     When given, a new client with the updated cap is used.
+
+        Returns
+        -------
+        str – the LLM's text reply (``response.content``).
+        """
+        from langchain_core.messages import HumanMessage
+
+        if max_tokens is not None and max_tokens != self.max_tokens:
+            client = AICoreClient(
+                model_name=self.model_name,
+                temperature=self.temperature,
+                max_tokens=max_tokens,
+                deployment_id=self.deployment_id,
+            )
+            llm = client.get_llm()
+        else:
+            llm = self.get_llm()
+
+        response = llm.invoke([HumanMessage(content=prompt)])
+        return response.content
+
     # ─────────────────────────────────────────────────────────────────────────
     # PRIVATE – INITIALISATION
     # ─────────────────────────────────────────────────────────────────────────
@@ -149,8 +263,10 @@ class AICoreClient:
         This makes the client work reliably regardless of whether the caller
         pre-loaded the .env file into ``os.environ``.
         """
-        # Import here so the module can still load without the SAP SDK
-        from gen_ai_hub.proxy.langchain.openai import ChatOpenAI as AICoreOpenAI  # type: ignore[import]
+        # Import here so the module can still load without the SAP SDK.
+        # The SDK package initializer eagerly imports optional provider bridges
+        # that are incompatible with the pinned LangChain 0.3 stack we use.
+        AICoreOpenAI = _load_aicore_openai_adapter()
         from gen_ai_hub.proxy.core.proxy_clients import get_proxy_client  # type: ignore[import]
 
         base_url = os.getenv("AICORE_BASE_URL", "")
