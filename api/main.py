@@ -285,11 +285,6 @@ def set_limits(request: SetLimitsRequest) -> dict:
         "session_id": request.session_id,
         "status": session.status,
         "message": session.status_message,
-        "zopa_exists": session.zopa_exists,
-        "zopa_range": (
-            f"{session.zopa_min:.2f} - {session.zopa_max:.2f} EUR"
-            if session.zopa_exists else None
-        ),
     }
 
 
@@ -359,34 +354,34 @@ def set_supplier_constraints_endpoint(session_id: str, limits: PartyLimits) -> d
 
 @app.post("/api/negotiations/{session_id}/set-retailer-constraints")
 def set_retailer_constraints(session_id: str, limits: PartyLimits) -> dict:
-    """Retailer sets constraints; triggers ZOPA analysis."""
+    """
+    Retailer sets constraints and starts negotiation.
+
+    No pre-flight ZOPA gate — negotiation always starts when both limits
+    are set. Limit-overlap analytics are returned as informational only.
+    """
     session = sessions_db.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     session.retailer_limits = limits
-    session.status = SessionStatus.CONSTRAINTS_SET
     session.updated_at = datetime.now().isoformat()
 
-    zopa_analysis = orchestrator.check_zopa_with_recommendations(session)
+    # Start negotiation (no ZOPA block)
+    if session.supplier_limits:
+        session = orchestrator.start_negotiation(session)
 
-    if zopa_analysis.zopa_exists:
-        session.zopa_min = zopa_analysis.zopa_min
-        session.zopa_max = zopa_analysis.zopa_max
-        session.zopa_exists = True
-        session.status = SessionStatus.NEGOTIATING
-        session.status_message = (
-            f"ZOPA exists: {zopa_analysis.zopa_min:.2f} - {zopa_analysis.zopa_max:.2f} EUR. Ready to negotiate."
-        )
-    else:
-        session.status = SessionStatus.NO_ZOPA
-        gap = zopa_analysis.gap_amount or 0.0
-        session.status_message = (
-            f"No ZOPA. Gap: {gap:.2f} EUR. {zopa_analysis.recommendation or 'No recommendation'}"
-        )
+    # Post-hoc analytics: does a price overlap exist?
+    zopa_analysis = orchestrator.check_zopa_with_recommendations(session)
+    session.zopa_min = zopa_analysis.zopa_min
+    session.zopa_max = zopa_analysis.zopa_max
+    session.zopa_exists = zopa_analysis.zopa_exists
 
     sessions_db[session_id] = session
-    logger.info(f"Session {session_id}: Retailer constraints set, ZOPA={zopa_analysis.zopa_exists}")
+    logger.info(
+        f"Session {session_id}: Retailer constraints set — "
+        f"overlap={zopa_analysis.zopa_exists}, status={session.status}"
+    )
     return {"session": session.dict(), "zopa_analysis": zopa_analysis.dict()}
 
 
@@ -595,6 +590,7 @@ def create_offer_from_request(request_id: str, data: CreateOfferFromRequestModel
             initiator=AgentRole.SUPPLIER,
             initial_offer=initial_offer,
             supplier_limits=supplier_limits,
+            product_data=product,  # Inject catalog data for data-driven agents
             status=SessionStatus.PENDING_LIMITS,
             status_message="Offer created — waiting for retailer to set limits",
             supplier_id=data.supplier_id,
@@ -647,6 +643,7 @@ def create_direct_offer(request: DirectOfferRequest) -> dict:
             initiator=AgentRole.SUPPLIER,
             initial_offer=request.offer_details,
             supplier_limits=supplier_limits,
+            product_data=product,  # Inject catalog data for data-driven agents
             status=SessionStatus.OFFER_SENT,
             status_message=f"Direct offer from {request.supplier_name} to {request.retailer_name}",
             supplier_id=request.supplier_id,

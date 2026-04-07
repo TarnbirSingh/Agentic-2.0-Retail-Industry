@@ -1,13 +1,13 @@
 """
 orchestration/simple_orchestrator.py
 ────────────────────────────────────
-Simplified negotiation orchestrator - just agent-to-agent rounds.
+Simplified negotiation orchestrator — agent-to-agent rounds.
 
-No complex state machines, just:
-1. Check ZOPA
-2. Let agents negotiate
-3. Validate each offer
-4. Stop when converged or max rounds
+No shared ZOPA: each agent knows only its own limits.
+1. Require both limits before starting
+2. Let agents negotiate based on their own constraints
+3. Validate each offer against the offeror's own limits
+4. Stop when converged (price gap < €1.50) or max rounds reached
 """
 
 import logging
@@ -15,10 +15,9 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from agents.simple_agent import NegotiationAgent
+from agents.negotiation_agent import NegotiationAgent
 from llm.ai_core_client import AICoreClient
 from models.constraints import (
-    calculate_zopa,
     validate_offer_against_retailer_limits,
     validate_offer_against_supplier_limits,
 )
@@ -49,42 +48,36 @@ class SimpleOrchestrator:
         session: NegotiationSession,
     ) -> NegotiationSession:
         """
-        Check ZOPA and start negotiation if viable.
+        Start negotiation once both parties have set their limits.
 
-        Returns updated session.
+        No pre-flight ZOPA check — agents negotiate from their own limits
+        and convergence (or failure) emerges naturally, just like real humans.
         """
-        # Calculate ZOPA
         if not session.supplier_limits or not session.retailer_limits:
             session.status = SessionStatus.PENDING_LIMITS
             session.status_message = "Waiting for both parties to set their limits"
             return session
 
-        zopa_min, zopa_max, zopa_exists = calculate_zopa(
-            supplier_min_price=session.supplier_limits.min_price,
-            retailer_max_price=session.retailer_limits.max_price,
-        )
-
-        session.zopa_min = zopa_min
-        session.zopa_max = zopa_max
-        session.zopa_exists = zopa_exists
-
-        if not zopa_exists:
-            session.status = SessionStatus.NO_ZOPA
-            session.status_message = (
-                f"No zone of possible agreement. "
-                f"Supplier minimum ({zopa_min:.2f} EUR) exceeds "
-                f"retailer maximum ({zopa_max:.2f} EUR)."
-            )
-            logger.warning(f"Session {session.session_id}: No ZOPA exists")
-            return session
-
-        # ZOPA exists, start negotiating
         session.status = SessionStatus.NEGOTIATING
-        session.status_message = f"Negotiating within ZOPA: {zopa_min:.2f} - {zopa_max:.2f} EUR"
-        logger.info(
-            f"Session {session.session_id}: ZOPA exists [{zopa_min:.2f}, {zopa_max:.2f}] EUR"
-        )
+        session.status_message = "Negotiation started — agents will discover common ground"
 
+        # Post-hoc analytics: compute limit overlap (informational only — never blocks)
+        s_min = session.supplier_limits.min_price
+        r_max = session.retailer_limits.max_price
+        session.zopa_exists = (
+            s_min is not None and r_max is not None and s_min <= r_max
+        )
+        session.zopa_min = s_min
+        session.zopa_max = r_max
+
+        overlap_str = (
+            f"[€{s_min:.2f}–€{r_max:.2f}]" if session.zopa_exists
+            else f"[no overlap: supplier_min={s_min}, retailer_max={r_max}]"
+        )
+        logger.info(
+            f"Session {session.session_id}: Negotiation started — "
+            f"limit overlap={session.zopa_exists} {overlap_str}"
+        )
         return session
 
     def run_negotiation_round(
@@ -130,12 +123,16 @@ class SimpleOrchestrator:
             else session.retailer_limits
         )
 
-        # Create agent
+        # Create agent — derive personality seed from session_id for reproducibility
+        # (same session always uses the same personality, different sessions vary)
+        _seed = abs(hash(session.session_id + next_role.value)) % (2**31)
         agent = NegotiationAgent(
             role=next_role,
             llm_client=self.llm_client,
             limits=limits,
             product_name=session.product_name,
+            product_data=session.product_data,  # Pass catalog data for data-driven defaults
+            personality_seed=_seed,
         )
 
         # Get last counterparty offer
@@ -156,8 +153,7 @@ class SimpleOrchestrator:
                 current_round=session.current_round,
                 history=session.rounds,
                 counterparty_last_offer=counterparty_last_offer,
-                zopa_min=session.zopa_min,
-                zopa_max=session.zopa_max,
+                max_rounds=session.max_rounds,
             )
         except Exception as e:
             logger.error(f"Failed to generate offer: {e}", exc_info=True)
@@ -189,7 +185,48 @@ class SimpleOrchestrator:
             # Don't fail immediately, let the other agent respond
             return session
 
-        # Check if we're converging
+        # ── Autonomous acceptance detection ────────────────────────────────
+        # If the agent decided to autonomously accept, the justification
+        # is tagged with "[ACCEPTED]". Treat this as immediate convergence.
+        if new_offer.justification and new_offer.justification.startswith("[ACCEPTED]"):
+            logger.info(
+                f"Session {session.session_id}: Autonomous acceptance by {next_role.value} "
+                f"at €{new_offer.unit_price:.2f} (round {session.current_round})"
+            )
+            session.status = SessionStatus.ACCEPTED
+            session.status_message = (
+                f"Deal accepted autonomously by {next_role.value} at "
+                f"€{new_offer.unit_price:.2f} in round {session.current_round}. "
+                f"No human approval required."
+            )
+            # Auto-approve for the accepting party
+            if next_role == AgentRole.SUPPLIER:
+                session.supplier_approved = True
+                session.retailer_approved = True  # Accepting = both agree
+            else:
+                session.retailer_approved = True
+                session.supplier_approved = True
+            return session
+
+        # ── Autonomous walk-away detection (Stagnation) ────────────────────
+        # If the agent's risk assessment recommends walk_away_signal due to
+        # stagnation (no realistic path to agreement), end the negotiation.
+        if agent_reasoning and agent_reasoning.tactic == "walk_away_signal":
+            # Check if this is a stagnation-based walk-away (not just tactical pressure)
+            reasoning_text = agent_reasoning.summary or ""
+            if "STAGNATION" in reasoning_text.upper() or "KEINE KONVERGENZ" in reasoning_text.upper() or "WALK" in reasoning_text.upper():
+                logger.warning(
+                    f"Session {session.session_id}: Autonomous walk-away by {next_role.value} "
+                    f"due to stagnation (round {session.current_round})"
+                )
+                session.status = SessionStatus.FAILED
+                session.status_message = (
+                    f"Negotiation terminated autonomously by {next_role.value} in round {session.current_round}. "
+                    f"Reason: {reasoning_text[:200]}"
+                )
+                return session
+
+        # ── Standard convergence check ─────────────────────────────────────
         if self._check_convergence(session):
             session.status = SessionStatus.PENDING_APPROVAL
             session.status_message = "Offers have converged — pending approval"
@@ -328,21 +365,22 @@ class SimpleOrchestrator:
         supplier_min = session.supplier_limits.min_price
         retailer_max = session.retailer_limits.max_price
 
-        zopa_min, zopa_max, zopa_exists = calculate_zopa(
-            supplier_min_price=supplier_min,
-            retailer_max_price=retailer_max,
-        )
+        # Post-hoc analytics: compute whether limits overlap
+        zopa_exists = (supplier_min is not None and retailer_max is not None
+                       and supplier_min <= retailer_max)
+        zopa_min = supplier_min
+        zopa_max = retailer_max
 
         if zopa_exists:
             return ZOPAAnalysis(
                 zopa_exists=True,
                 zopa_min=zopa_min,
                 zopa_max=zopa_max,
-                recommendation=f"ZOPA exists: {zopa_min:.2f} - {zopa_max:.2f} EUR. Ready to negotiate."
+                recommendation=f"Limits overlap: {zopa_min:.2f} – {zopa_max:.2f} EUR. Negotiation can converge."
             )
 
-        # No ZOPA - calculate gap and get recommendations
-        gap = supplier_min - retailer_max
+        # No overlap — calculate gap and provide recommendations
+        gap = (supplier_min or 0.0) - (retailer_max or 0.0)
 
         # Use LLM for intelligent recommendations
         prompt = f"""You are a B2B negotiation mediator analyzing a no-ZOPA situation.
@@ -484,8 +522,6 @@ Be specific with numbers. Focus on practical solutions."""
                         supplier_last_price=s_price,
                         retailer_last_price=r_price,
                         price_gap=gap,
-                        zopa_min=session.zopa_min,
-                        zopa_max=session.zopa_max,
                     )
 
             if last_round.role == AgentRole.RETAILER and session.retailer_limits:
@@ -507,8 +543,6 @@ Be specific with numbers. Focus on practical solutions."""
                         supplier_last_price=s_price,
                         retailer_last_price=r_price,
                         price_gap=gap,
-                        zopa_min=session.zopa_min,
-                        zopa_max=session.zopa_max,
                     )
 
         # ── 2. Negotiation stalled ─────────────────────────────────────────────
@@ -546,8 +580,6 @@ Be specific with numbers. Focus on practical solutions."""
                         supplier_last_price=s_price,
                         retailer_last_price=r_price,
                         price_gap=price_gap,
-                        zopa_min=session.zopa_min,
-                        zopa_max=session.zopa_max,
                     )
 
         # ── 3. Max rounds approaching ──────────────────────────────────────────
@@ -570,8 +602,6 @@ Be specific with numbers. Focus on practical solutions."""
                 supplier_last_price=s_price,
                 retailer_last_price=r_price,
                 price_gap=price_gap,
-                zopa_min=session.zopa_min,
-                zopa_max=session.zopa_max,
                 rounds_remaining=rounds_remaining,
             )
 

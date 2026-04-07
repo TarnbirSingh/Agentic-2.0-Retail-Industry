@@ -394,3 +394,247 @@ def should_make_tradeoff(
         return True
     
     return False
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEGOTIATION PHASE DETECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class NegotiationPhase(str, Enum):
+    """
+    Current phase of the negotiation.
+
+    Based on Gulliver (1979) phase theory and Adair & Brett (2005):
+    - OPENING: Anchoring, information gathering
+    - EXPLORING: Testing limits, probing
+    - BARGAINING: Active concessions, integrative moves
+    - CLOSING: Final offers, convergence
+    """
+    OPENING = "opening"        # Rounds 1-20% of max
+    EXPLORING = "exploring"    # Rounds 20-40% of max
+    BARGAINING = "bargaining"  # Rounds 40-75% of max
+    CLOSING = "closing"        # Rounds 75-100% of max
+
+
+class TacticType(str, Enum):
+    """
+    Negotiation tactics available to the agent.
+
+    Scientific basis: Lewicki et al. (2015) "Negotiation: Readings, Exercises, Cases"
+    """
+    CONCEDE = "concede"                    # Normal price movement
+    HOLD_FIRM = "hold_firm"               # Repeat offer, no change
+    TRADEOFF = "tradeoff"                  # Change another attribute instead
+    CONDITIONAL = "conditional"            # "If you do X, I'll do Y"
+    SPLIT_DIFFERENCE = "split_difference"  # Propose exact midpoint
+    FINAL_OFFER = "final_offer"           # Signal no further concession
+    WALK_AWAY_THREAT = "walk_away_threat" # Signal BATNA / alternatives
+    CREATIVE_BUNDLE = "creative_bundle"   # Propose entirely new package
+
+
+def detect_phase(
+    current_round: int,
+    max_rounds: int,
+    analysis: Optional[dict] = None,
+) -> NegotiationPhase:
+    """
+    Determine current negotiation phase based on round progress and situation.
+
+    Args:
+        current_round: Current round number (1-indexed)
+        max_rounds: Maximum rounds allowed
+        analysis: Situation analysis dict (from _analyze_situation)
+
+    Returns:
+        NegotiationPhase
+    """
+    if max_rounds <= 0:
+        return NegotiationPhase.CLOSING
+
+    progress = current_round / max_rounds
+
+    if progress <= 0.20:
+        return NegotiationPhase.OPENING
+    elif progress <= 0.40:
+        return NegotiationPhase.EXPLORING
+    elif progress <= 0.75:
+        return NegotiationPhase.BARGAINING
+    else:
+        return NegotiationPhase.CLOSING
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ROLE-SPECIFIC STRATEGY PROFILES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Supplier profile: Sales manager mindset
+# - Protects margin aggressively
+# - Boulware tendency (holds firm, concedes late)
+# - Leverage: quality, reliability, ecosystem lock-in
+# - Higher anchor (18% above target)
+SUPPLIER_DEFAULT_STRATEGY = NegotiationStrategy(
+    posture=NegotiationPosture.BALANCED,
+    concession_pattern=ConcessionPattern.BOULWARE,
+    concession_rate=0.08,            # Small concessions — protect margin
+    min_concession=0.10,
+    max_concession=3.0,
+    initial_anchor_multiplier=1.18,  # Ask 18% above target
+    available_leverage=[
+        LeverageType.QUALITY,
+        LeverageType.RELATIONSHIP,
+        LeverageType.VOLUME,
+    ],
+    leverage_threshold_round=2,
+    urgency_factor=0.3,              # Patient — not desperate
+    accelerate_after_round=8,
+    logrolling_enabled=True,
+    priority_attributes=["price", "volume"],
+)
+
+# Retailer profile: Procurement manager mindset
+# - Pushes price hard using volume as leverage
+# - Conceder tendency (generous early to build rapport, then hardens)
+# - Leverage: volume, alternatives (BATNA), market benchmarks
+# - Lower anchor (22% below target)
+RETAILER_DEFAULT_STRATEGY = NegotiationStrategy(
+    posture=NegotiationPosture.COMPETITIVE,
+    concession_pattern=ConcessionPattern.CONCEDER,
+    concession_rate=0.18,            # Early generosity to signal good faith
+    min_concession=0.20,
+    max_concession=4.0,
+    initial_anchor_multiplier=1.22,  # Offer 22% below target
+    available_leverage=[
+        LeverageType.VOLUME,
+        LeverageType.ALTERNATIVES,
+        LeverageType.MARKET,
+    ],
+    leverage_threshold_round=2,
+    urgency_factor=0.45,             # Moderate urgency
+    accelerate_after_round=7,
+    logrolling_enabled=True,
+    priority_attributes=["price", "delivery_days"],
+)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEGOTIATION PERSONALITY — STOCHASTIC VARIATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import random
+
+
+class NegotiationPersonality:
+    """
+    Stochastic personality variation for each negotiation session.
+
+    Ensures no two negotiations run identically even with the same constraints.
+    Models the natural variation in negotiator behavior (mood, risk appetite,
+    time pressure perception, willingness to cooperate).
+
+    Used by: simple_agent.py to modify strategy parameters at session start.
+    """
+
+    def __init__(self, base_strategy: NegotiationStrategy, seed: Optional[int] = None):
+        """
+        Generate a randomized personality variation from a base strategy.
+
+        Args:
+            base_strategy: The role-specific default strategy
+            seed: Optional random seed (for reproducibility in testing)
+        """
+        if seed is not None:
+            random.seed(seed)
+
+        # ── Core personality traits (drawn fresh each session) ─────────────
+        # How tough is the agent today? (0.7 = softer, 1.3 = tougher)
+        self.toughness_multiplier = random.uniform(0.75, 1.25)
+
+        # How patient? Affects urgency_factor
+        self.patience_factor = random.uniform(0.7, 1.0)
+
+        # Risk appetite: willingness to walk away
+        self.risk_appetite = random.uniform(0.2, 0.8)
+
+        # Opening style this session
+        self.opening_style = random.choice([
+            "generous",  # Large first concession to signal good faith
+            "moderate",  # Standard opening
+            "tough",     # Small first concession, test the waters
+        ])
+
+        # Preferred tactic bias: which tactics this agent favors
+        self.tactic_preferences = random.sample(
+            [
+                TacticType.CONCEDE,
+                TacticType.HOLD_FIRM,
+                TacticType.TRADEOFF,
+                TacticType.CONDITIONAL,
+            ],
+            k=2,  # Pick 2 preferred tactics
+        )
+
+        # ── Apply variation to strategy ────────────────────────────────────
+        self.strategy = self._apply_to_strategy(base_strategy)
+
+    def _apply_to_strategy(self, base: NegotiationStrategy) -> NegotiationStrategy:
+        """Apply personality variation to base strategy parameters."""
+        import copy
+        s = copy.deepcopy(base)
+
+        # Vary concession rate
+        s.concession_rate = max(
+            0.03,
+            min(0.35, base.concession_rate * self.toughness_multiplier)
+        )
+
+        # Vary max concession
+        s.max_concession = max(
+            1.0,
+            min(8.0, base.max_concession * self.toughness_multiplier)
+        )
+
+        # Vary urgency
+        s.urgency_factor = max(
+            0.1,
+            min(0.9, base.urgency_factor * self.patience_factor)
+        )
+
+        # Vary anchor multiplier
+        anchor_variation = random.uniform(-0.03, 0.05)  # -3% to +5%
+        s.initial_anchor_multiplier = max(
+            1.05,
+            min(1.40, base.initial_anchor_multiplier + anchor_variation)
+        )
+
+        return s
+
+    def get_opening_concession_modifier(self) -> float:
+        """
+        Returns a multiplier for the first-round concession.
+        generous → 1.5x, moderate → 1.0x, tough → 0.5x
+        """
+        return {"generous": 1.5, "moderate": 1.0, "tough": 0.5}[self.opening_style]
+
+    def prefers_tactic(self, tactic: TacticType) -> bool:
+        """Returns True if this personality has an affinity for this tactic."""
+        return tactic in self.tactic_preferences
+
+    def to_prompt_hint(self) -> str:
+        """Natural language personality hint for LLM prompts."""
+        hints = {
+            "generous": "You tend to open with goodwill gestures to build rapport.",
+            "moderate": "You follow a balanced, professional negotiating style.",
+            "tough": "You start tough and concede only when necessary.",
+        }
+        style_hint = hints[self.opening_style]
+
+        tactic_names = [t.value.replace("_", " ") for t in self.tactic_preferences]
+        tactic_hint = f"You favor these tactics: {', '.join(tactic_names)}."
+
+        risk_hint = (
+            "You are willing to walk away if terms don't meet your needs."
+            if self.risk_appetite > 0.6
+            else "You prefer reaching an agreement over walking away."
+        )
+
+        return f"{style_hint} {tactic_hint} {risk_hint}"

@@ -1,23 +1,27 @@
 """
 agents/simple_agent.py
 ─────────────────────
-Strategic negotiation agent with multi-attribute utility and concession logic.
+Strategic negotiation agent — Agentic 2.0 (ZOPA-free design).
 
-Architecture Evolution:
-──────────────────────
-V1 (Original): Single LLM call, distributive price negotiation
-V2 (Current): Multi-phase ReAct-inspired flow with:
-  - THINK: Analyze situation
-  - STRATEGIZE: Select tactics
-  - CALCULATE: Compute offer parameters (utility-based)
-  - GENERATE: LLM generates justification
-  - VALIDATE: Self-reflection
+Design Principle — No Shared ZOPA:
+───────────────────────────────────
+Each agent knows ONLY its own constraints (PartyLimits). There is no shared
+"Zone of Possible Agreement" passed between agents — exactly as in real
+human-to-human negotiation. The counterparty's limits are unknown.
+
+Acceptance, anchoring, and concessions are driven by:
+  - Own PartyLimits (floor / ceiling)
+  - Utility of the incoming offer against own preferences
+  - Opponent model inference from observed behaviour
+  - Time pressure (rounds remaining / phase)
 
 Theoretical Foundation:
 ───────────────────────
 - ReAct Pattern (Yao 2023): Thought → Action → Observation
 - Multi-Attribute Utility (O'Brien 2024, Fujita)
 - Concession Strategies (Okunev 2022, Monczka 2009)
+- Opponent Modeling (Hindriks & Tykhonov 2008)
+- Phase Theory (Gulliver 1979, Adair & Brett 2005)
 """
 
 import json
@@ -35,100 +39,237 @@ from models.agent_reasoning import AgentReasoning, ReasoningStep
 
 logger = logging.getLogger(__name__)
 
-# Import new strategic modules
+# ── Strategic modules (graceful fallback if unavailable) ──────────────────────
 try:
     from models.utility import (
         NegotiationPreferences,
         calculate_utility,
-        UtilityResult,
     )
     from models.constraints import convert_limits_to_preferences
     from agents.strategy import (
         NegotiationStrategy,
+        NegotiationPhase,
+        TacticType,
+        ConcessionPattern,
+        LeverageType,
+        NegotiationPersonality,
+        SUPPLIER_DEFAULT_STRATEGY,
+        RETAILER_DEFAULT_STRATEGY,
         calculate_concession_amount,
         calculate_initial_anchor,
         select_leverage,
         should_make_tradeoff,
-        LeverageType,
-        ConcessionPattern,
+        detect_phase,
     )
     STRATEGIC_MODE_AVAILABLE = True
-except ImportError:
+except ImportError as _e:
     STRATEGIC_MODE_AVAILABLE = False
-    logger.warning("Strategic mode not available - falling back to basic negotiation")
+    logger.warning(f"Strategic mode not available — falling back to basic: {_e}")
+
+try:
+    from agents.opponent_model import OpponentModel
+    OPPONENT_MODEL_AVAILABLE = True
+except ImportError:
+    OPPONENT_MODEL_AVAILABLE = False
+    logger.warning("OpponentModel not available")
 
 
 class NegotiationAgent:
     """
-    Strategic B2B negotiation agent with multi-attribute utility awareness.
-    
-    Can operate in two modes:
-    1. STRATEGIC (default): Uses utility functions, concession strategies, leverage
-    2. BASIC (fallback): Simple price-based negotiation (if utility module unavailable)
+    Adaptive B2B negotiation agent with opponent modeling and autonomous acceptance.
+
+    Each agent operates from its own limits only — it never receives the
+    counterparty's min/max prices. Convergence emerges through the natural
+    process of mutual concessions, mirroring real-world negotiations.
     """
-    
+
     def __init__(
         self,
         role: AgentRole,
         llm_client: AICoreClient,
         limits: PartyLimits,
         product_name: str,
-        preferences: Optional[NegotiationPreferences] = None,
-        strategy: Optional[NegotiationStrategy] = None,
+        preferences: Optional["NegotiationPreferences"] = None,
+        strategy: Optional["NegotiationStrategy"] = None,
+        product_data: Optional[dict] = None,
+        personality_seed: Optional[int] = None,
     ):
         self.role = role
         self.llm_client = llm_client
         self.limits = limits
         self.product_name = product_name
-        
-        # Strategic components
+        self.product_data = product_data
+
         if STRATEGIC_MODE_AVAILABLE:
-            # Convert limits to preferences if not provided
-            if preferences is None:
-                self.preferences = convert_limits_to_preferences(
-                    limits,
-                    is_supplier=(role == AgentRole.SUPPLIER)
-                )
-            else:
-                self.preferences = preferences
-            
-            # Use default strategy if not provided
-            if strategy is None:
-                self.strategy = NegotiationStrategy(
-                    concession_pattern=ConcessionPattern.LINEAR,
-                    concession_rate=0.15,
-                    initial_anchor_multiplier=1.15,
-                )
-            else:
-                self.strategy = strategy
+            self.preferences = preferences or convert_limits_to_preferences(
+                limits, is_supplier=(role == AgentRole.SUPPLIER)
+            )
+            base = (
+                SUPPLIER_DEFAULT_STRATEGY
+                if role == AgentRole.SUPPLIER
+                else RETAILER_DEFAULT_STRATEGY
+            )
+            self._personality = NegotiationPersonality(
+                strategy if strategy is not None else base,
+                seed=personality_seed,
+            )
+            self.strategy = self._personality.strategy
         else:
             self.preferences = None
             self.strategy = None
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE 1: THINK - Analyze Current Situation
-    # ═══════════════════════════════════════════════════════════════════════════
-    
+            self._personality = None
+
+        self.opponent_model = OpponentModel(my_role=role) if OPPONENT_MODEL_AVAILABLE else None
+        self._consecutive_no_progress = 0
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Own-limits helpers
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _own_floor(self) -> float:
+        """The price below which this agent will NEVER go."""
+        if self.role == AgentRole.SUPPLIER:
+            return self.limits.min_price or 0.0
+        else:
+            return 0.0  # Retailer has no floor (they want low prices)
+
+    def _own_ceiling(self) -> float:
+        """The price above which this agent will NEVER go."""
+        if self.role == AgentRole.RETAILER:
+            return self.limits.max_price or float("inf")
+        else:
+            return float("inf")  # Supplier has no ceiling (they want high prices)
+
+    def _own_range(self) -> float:
+        """Width of this agent's own price range (for gap-% calculations)."""
+        if self.role == AgentRole.SUPPLIER:
+            lo = self.limits.min_price or 0.0
+            hi = (
+                self.limits.max_price
+                or (lo * 1.40)  # assume 40% upside if no explicit max
+            )
+            return max(hi - lo, 1.0)
+        else:
+            hi = self.limits.max_price or 1.0
+            lo = hi * 0.60  # assume retailer wants ~40% below their ceiling
+            return max(hi - lo, 1.0)
+
+    def _own_opening_anchor(self) -> float:
+        """
+        Round-1 anchor based solely on own limits.
+
+        Supplier starts high (near/at own max_price or well above min_price).
+        Retailer starts low (well below own max_price).
+        """
+        if self.role == AgentRole.SUPPLIER:
+            if self.limits.max_price:
+                return self.limits.max_price * 0.97
+            elif self.limits.min_price:
+                return self.limits.min_price * 1.35
+            return 100.0
+        else:
+            if self.limits.max_price:
+                return self.limits.max_price * 0.65
+            return 50.0
+
+    def _price_within_own_limits(self, price: float) -> bool:
+        if self.role == AgentRole.SUPPLIER:
+            return price >= self._own_floor()
+        else:
+            return price <= self._own_ceiling()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACCEPTANCE CHECK
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def should_accept_offer(
+        self,
+        counterparty_offer: NegotiationOffer,
+        current_round: int,
+        max_rounds: int,
+        history: list,
+    ) -> Tuple[bool, str]:
+        """
+        Decide autonomously whether to accept the counterparty's offer.
+
+        Only own limits are consulted — no shared ZOPA knowledge.
+
+        Criteria (all must hold):
+        1. Price satisfies own hard limit
+        2. Not too early in negotiation (round ≥ 4)
+        3. Phase is at least BARGAINING
+        4. Utility exceeds acceptance threshold (adjusted for urgency)
+        """
+        price = counterparty_offer.unit_price
+
+        # ── 1. Own hard-limit check ────────────────────────────────────────
+        if not self._price_within_own_limits(price):
+            limit_val = self._own_floor() if self.role == AgentRole.SUPPLIER else self._own_ceiling()
+            direction = "below floor" if self.role == AgentRole.SUPPLIER else "above ceiling"
+            return False, f"Price €{price:.2f} {direction} (limit=€{limit_val:.2f})"
+
+        # ── 2. Minimum-rounds guard ────────────────────────────────────────
+        if current_round < 4:
+            return False, f"Too early (round {current_round} < 4) — establishing position"
+
+        # ── 3. Phase guard ─────────────────────────────────────────────────
+        if STRATEGIC_MODE_AVAILABLE:
+            phase = detect_phase(current_round, max_rounds)
+            if phase in (NegotiationPhase.OPENING, NegotiationPhase.EXPLORING):
+                return False, f"Phase {phase.value} — still exploring"
+
+        # ── 4. Utility check (adjusted for urgency) ────────────────────────
+        utility_score = 0.5
+        rounds_remaining = max_rounds - current_round
+        base_threshold = 0.72
+        urgency_bonus = max(0.0, (5 - rounds_remaining) * 0.03)
+        acceptance_utility = max(0.50, base_threshold - urgency_bonus)
+
+        if STRATEGIC_MODE_AVAILABLE and self.preferences:
+            try:
+                res = calculate_utility(
+                    preferences=self.preferences,
+                    price=price,
+                    volume=counterparty_offer.volume,
+                    delivery_days=counterparty_offer.delivery_days,
+                    payment_terms=counterparty_offer.payment_terms,
+                )
+                utility_score = res.total_utility
+            except Exception:
+                pass
+
+        # ── 5. Opponent-model signal ───────────────────────────────────────
+        opponent_stuck = (
+            self.opponent_model
+            and self.opponent_model.get_rounds_without_concession() >= 3
+        )
+
+        price_ok = self._price_within_own_limits(price)
+        utility_ok = utility_score >= acceptance_utility
+        closing_phase = STRATEGIC_MODE_AVAILABLE and detect_phase(current_round, max_rounds) == NegotiationPhase.CLOSING
+
+        if (utility_ok and price_ok) or (closing_phase and price_ok and utility_score >= 0.50) or opponent_stuck:
+            return True, (
+                f"Accepting: utility={utility_score:.2f}≥{acceptance_utility:.2f}, "
+                f"price=€{price:.2f}"
+            )
+
+        return False, (
+            f"Not accepting: utility={utility_score:.2f}<{acceptance_utility:.2f}"
+        )
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 1: THINK
+    # ─────────────────────────────────────────────────────────────────────────
+
     def _analyze_situation(
         self,
         current_round: int,
         max_rounds: int,
-        history: list[NegotiationRound],
+        history: list,
         counterparty_last_offer: Optional[NegotiationOffer],
-        zopa_min: float,
-        zopa_max: float,
     ) -> dict:
-        """
-        Phase 1: THINK - Analyze the negotiation situation.
-        
-        Returns dict with:
-        - current_price_gap: Absolute EUR gap between parties
-        - gap_percentage: Gap as % of ZOPA width
-        - rounds_remaining: Rounds left
-        - counterparty_concession: How much they conceded last round
-        - is_stuck: Are we stuck in same position?
-        - urgency_level: How urgent is closure?
-        """
+        """Analyze negotiation situation using only own-limits knowledge."""
         analysis = {
             "current_price_gap": 0.0,
             "gap_percentage": 0.0,
@@ -136,531 +277,615 @@ class NegotiationAgent:
             "counterparty_concession": None,
             "is_stuck": False,
             "urgency_level": "low",
+            "phase": "opening",
         }
-        
+
+        if STRATEGIC_MODE_AVAILABLE:
+            analysis["phase"] = detect_phase(current_round, max_rounds).value
+
         if not counterparty_last_offer:
-            # First round - no analysis yet
             return analysis
-        
-        # Calculate price gap
-        my_last_price = None
-        if history:
-            my_rounds = [r for r in history if r.role == self.role]
-            if my_rounds:
-                my_last_price = my_rounds[-1].offer.unit_price
-        
-        if my_last_price:
+
+        my_rounds = [r for r in history if r.role == self.role]
+        my_last_price = my_rounds[-1].offer.unit_price if my_rounds else None
+
+        if my_last_price is not None:
             analysis["current_price_gap"] = abs(my_last_price - counterparty_last_offer.unit_price)
-            zopa_width = zopa_max - zopa_min
-            if zopa_width > 0:
-                analysis["gap_percentage"] = (analysis["current_price_gap"] / zopa_width) * 100
-        
-        # Calculate counterparty's last concession
+            own_range = self._own_range()
+            analysis["gap_percentage"] = (analysis["current_price_gap"] / own_range) * 100
+
         counterparty_rounds = [r for r in history if r.role != self.role]
         if len(counterparty_rounds) >= 2:
-            prev_price = counterparty_rounds[-2].offer.unit_price
-            curr_price = counterparty_rounds[-1].offer.unit_price
-            
-            if self.role == AgentRole.SUPPLIER:
-                # For supplier: retailer increasing price = concession
-                analysis["counterparty_concession"] = curr_price - prev_price
-            else:
-                # For retailer: supplier lowering price = concession
-                analysis["counterparty_concession"] = prev_price - curr_price
-        
-        # Check if stuck (same price for 2+ rounds)
-        if len(counterparty_rounds) >= 2:
-            if abs(counterparty_rounds[-1].offer.unit_price - counterparty_rounds[-2].offer.unit_price) < 0.10:
+            prev = counterparty_rounds[-2].offer.unit_price
+            curr = counterparty_rounds[-1].offer.unit_price
+            analysis["counterparty_concession"] = (
+                prev - curr if self.role == AgentRole.SUPPLIER else curr - prev
+            )
+            if abs(curr - prev) < 0.10:
                 analysis["is_stuck"] = True
-        
-        # Urgency assessment
-        if analysis["rounds_remaining"] <= 2:
+                self._consecutive_no_progress += 1
+            else:
+                self._consecutive_no_progress = 0
+
+        rem = analysis["rounds_remaining"]
+        if rem <= 2:
             analysis["urgency_level"] = "critical"
-        elif analysis["rounds_remaining"] <= 4:
+        elif rem <= 4:
             analysis["urgency_level"] = "high"
-        elif analysis["rounds_remaining"] <= 6:
+        elif rem <= 6:
             analysis["urgency_level"] = "medium"
-        
-        logger.debug(f"Situation analysis: {analysis}")
+
         return analysis
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE 2: STRATEGIZE - Select Negotiation Tactic
-    # ═══════════════════════════════════════════════════════════════════════════
-    
-    def _select_tactic(
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 2: STRATEGIZE — LLM selects tactic
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _select_tactic_with_llm(
         self,
         analysis: dict,
         current_round: int,
         max_rounds: int,
+        counterparty_last_offer: Optional[NegotiationOffer],
     ) -> dict:
-        """
-        Phase 2: STRATEGIZE - Choose negotiation tactics for this round.
-        
-        Returns dict with:
-        - concession_amount: EUR to concede this round
-        - use_leverage: LeverageType or None
-        - propose_tradeoff: Should we suggest multi-attribute trade?
-        - recommended_action: "concede", "hold", "accept", "reject"
-        """
-        if not STRATEGIC_MODE_AVAILABLE or not self.strategy:
-            # Fallback: simple halfway approach
-            return {
-                "concession_amount": analysis.get("current_price_gap", 0) * 0.5,
-                "use_leverage": None,
-                "propose_tradeoff": False,
-                "recommended_action": "concede",
+        """LLM decides which tactic to use based on situation analysis."""
+        role_name = "supplier" if self.role == AgentRole.SUPPLIER else "retailer"
+
+        opponent_context = (
+            f"\n\nOPPONENT ANALYSIS:\n{self.opponent_model.to_prompt_context()}"
+            if self.opponent_model else ""
+        )
+        personality_hint = (
+            f"\n\nYOUR PERSONALITY THIS SESSION:\n{self._personality.to_prompt_hint()}"
+            if self._personality else ""
+        )
+        counterparty_price_line = (
+            f"\nCounterparty's latest offer: €{counterparty_last_offer.unit_price:.2f} | "
+            f"{counterparty_last_offer.volume} units | {counterparty_last_offer.delivery_days}d | "
+            f"{counterparty_last_offer.payment_terms}"
+            if counterparty_last_offer else ""
+        )
+
+        own_limit_line = (
+            f"\nYour hard floor: €{self._own_floor():.2f}"
+            if self.role == AgentRole.SUPPLIER
+            else f"\nYour hard ceiling: €{self._own_ceiling():.2f}"
+        )
+
+        prompt = f"""You are a strategic {role_name} in a B2B negotiation for: {self.product_name}
+
+SITUATION:
+- Round: {current_round}/{max_rounds} (Phase: {analysis.get('phase','bargaining').upper()})
+- Price gap: €{analysis['current_price_gap']:.2f} ({analysis['gap_percentage']:.1f}% of your range)
+- Rounds remaining: {analysis['rounds_remaining']}
+- Urgency: {analysis['urgency_level']}
+- Negotiation stuck: {analysis['is_stuck']}{own_limit_line}{counterparty_price_line}{opponent_context}{personality_hint}
+
+AVAILABLE TACTICS (choose exactly ONE):
+- concede: Make a price concession (standard move)
+- hold_firm: Repeat your last offer, no change (signal you're near limit)
+- tradeoff: Change a non-price attribute (delivery speed, payment terms) instead of price
+- conditional: Offer a deal contingent on a condition (e.g., "If volume is 2000, I'll match €46")
+- split_difference: Propose splitting the remaining gap exactly in half
+- final_offer: Signal this is your last possible offer (use sparingly, max once)
+- walk_away_threat: Signal you have alternatives / BATNA (use very sparingly)
+- creative_bundle: Propose an entirely new package (different product mix, terms)
+
+OUTPUT ONLY valid JSON (no markdown, no explanation):
+{{
+  "tactic": "<one of the tactic names above>",
+  "tactic_reason": "<one sentence why>",
+  "use_leverage": "<volume|timing|relationship|alternatives|quality|market|null>",
+  "propose_tradeoff": <true|false>,
+  "recommended_action": "<concede|hold|accept|reject|tradeoff>"
+}}"""
+
+        default = {
+            "tactic": "concede",
+            "tactic_reason": "Standard concession",
+            "use_leverage": None,
+            "propose_tradeoff": False,
+            "recommended_action": "concede",
+        }
+
+        try:
+            raw = self.llm_client.generate(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+            ).strip()
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+            raw = raw.strip()
+            parsed = json.loads(raw)
+
+            valid_tactics = {
+                "concede", "hold_firm", "tradeoff", "conditional",
+                "split_difference", "final_offer", "walk_away_threat", "creative_bundle"
             }
-        
-        tactic = {}
-        
-        # Calculate strategic concession
-        tactic["concession_amount"] = calculate_concession_amount(
-            strategy=self.strategy,
-            round_number=current_round,
-            max_rounds=max_rounds,
-            current_gap=analysis["current_price_gap"],
-            counterparty_last_concession=analysis.get("counterparty_concession"),
-        )
-        
-        # Select leverage
-        tactic["use_leverage"] = select_leverage(
-            strategy=self.strategy,
-            round_number=current_round,
-            current_situation=analysis,
-        )
-        
-        # Consider trade-offs (multi-attribute negotiation)
-        tactic["propose_tradeoff"] = should_make_tradeoff(
-            strategy=self.strategy,
-            round_number=current_round,
-            utility_gap=analysis["gap_percentage"] / 100.0,  # Rough proxy
-        )
-        
-        # Recommended action
-        if analysis["gap_percentage"] < 2.0:
-            tactic["recommended_action"] = "accept"  # Very close
-        elif analysis["urgency_level"] == "critical" and analysis["gap_percentage"] < 10.0:
-            tactic["recommended_action"] = "concede"  # Last chance
-        elif analysis["is_stuck"]:
-            tactic["recommended_action"] = "tradeoff"  # Break deadlock
-        else:
-            tactic["recommended_action"] = "concede"  # Normal negotiation
-        
-        logger.debug(f"Selected tactic: {tactic}")
-        return tactic
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE 3: CALCULATE - Compute Concrete Offer Parameters
-    # ═══════════════════════════════════════════════════════════════════════════
-    
+            if parsed.get("tactic") not in valid_tactics:
+                parsed["tactic"] = "concede"
+            valid_leverages = {"volume", "timing", "relationship", "alternatives", "quality", "market"}
+            if parsed.get("use_leverage") not in valid_leverages:
+                parsed["use_leverage"] = None
+            return parsed
+
+        except Exception as e:
+            logger.warning(f"[{self.role.value}] LLM tactic failed: {e}")
+            if analysis["urgency_level"] == "critical" and analysis["gap_percentage"] < 10.0:
+                default["tactic"] = "split_difference"
+            elif analysis["is_stuck"] and self._consecutive_no_progress >= 3:
+                default["tactic"] = "tradeoff"
+                default["propose_tradeoff"] = True
+            if self.opponent_model:
+                if self.opponent_model.last_sentiment == "threatening":
+                    default["tactic"] = "conditional"
+                elif self.opponent_model.opponent_type == "boulware":
+                    default["tactic"] = "split_difference"
+            return default
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 3: CALCULATE — Compute offer parameters
+    # ─────────────────────────────────────────────────────────────────────────
+
     def _calculate_offer_params(
         self,
         tactic: dict,
         counterparty_last_offer: Optional[NegotiationOffer],
         current_round: int,
-        zopa_min: float,
-        zopa_max: float,
         history: Optional[list] = None,
+        analysis: Optional[dict] = None,
+        max_rounds: int = 50,
     ) -> dict:
         """
-        Phase 3: CALCULATE - Compute concrete offer parameters.
-        
-        This is the "deterministic math" phase - no LLM, pure calculation.
-        
-        Returns dict with:
-        - unit_price: Calculated price
-        - volume: Order quantity
-        - delivery_days: Lead time
-        - payment_terms: Payment terms
+        Compute concrete offer parameters based only on own limits.
+        No ZOPA passed or used.
         """
         params = {}
-        
-        # PRICE CALCULATION
+        analysis = analysis or {}
+
+        # ── Price ──────────────────────────────────────────────────────────
         if current_round == 1:
-            # First round: use anchoring strategy
+            # Round-1: anchor based on own limits + strategy
             if STRATEGIC_MODE_AVAILABLE and self.strategy and self.preferences:
-                target_price = self.preferences.target_price or (
-                    (zopa_min + zopa_max) / 2
-                )
-                params["unit_price"] = calculate_initial_anchor(
-                    target_price=target_price,
+                target = self.preferences.target_price or self._own_opening_anchor()
+                raw_anchor = calculate_initial_anchor(
+                    target_price=target,
                     strategy=self.strategy,
                     is_supplier=(self.role == AgentRole.SUPPLIER),
                 )
+                if self._personality:
+                    raw_anchor = target + (raw_anchor - target) * (
+                        2.0 - self._personality.get_opening_concession_modifier()
+                    )
+                params["unit_price"] = raw_anchor
             else:
-                # Simple anchor: 15% beyond ZOPA midpoint
-                midpoint = (zopa_min + zopa_max) / 2
-                if self.role == AgentRole.SUPPLIER:
-                    params["unit_price"] = midpoint + (zopa_max - midpoint) * 0.5
-                else:
-                    params["unit_price"] = midpoint - (midpoint - zopa_min) * 0.5
+                params["unit_price"] = self._own_opening_anchor()
         else:
-            # Subsequent rounds: apply concession from MY last offer (not ZOPA boundary)
-            if counterparty_last_offer:
-                # Resolve my last price from history (correct baseline for concession)
-                my_last_price = None
-                if history:
-                    my_rounds = [r for r in history if r.role == self.role]
-                    if my_rounds:
-                        my_last_price = my_rounds[-1].offer.unit_price
+            tactic_type = tactic.get("tactic", "concede")
 
-                # Fall back to ZOPA boundary only if we truly have no history
-                if my_last_price is None:
-                    my_last_price = zopa_max if self.role == AgentRole.SUPPLIER else zopa_min
+            # My last price
+            my_last_price = None
+            if history:
+                my_rounds = [r for r in history if r.role == self.role]
+                if my_rounds:
+                    my_last_price = my_rounds[-1].offer.unit_price
 
-                # Calculate new price: move from MY last position toward counterparty
-                concession = tactic["concession_amount"]
+            # Fallback: start from own best-case position
+            if my_last_price is None:
+                my_last_price = self._own_opening_anchor()
+
+            current_gap = analysis.get(
+                "current_price_gap",
+                abs(my_last_price - (counterparty_last_offer.unit_price if counterparty_last_offer else my_last_price)),
+            )
+
+            if tactic_type == "hold_firm":
+                params["unit_price"] = my_last_price
+
+            elif tactic_type == "split_difference" and counterparty_last_offer:
+                params["unit_price"] = (my_last_price + counterparty_last_offer.unit_price) / 2
+
+            elif tactic_type == "final_offer":
+                small = min(0.50, current_gap * 0.05)
+                params["unit_price"] = (
+                    my_last_price - small
+                    if self.role == AgentRole.SUPPLIER
+                    else my_last_price + small
+                )
+
+            elif tactic_type == "tradeoff":
+                params["unit_price"] = my_last_price
+                params["_tradeoff_active"] = True
+
+            elif tactic_type in ("walk_away_threat", "conditional"):
+                concession = (
+                    calculate_concession_amount(
+                        strategy=self.strategy,
+                        round_number=current_round,
+                        max_rounds=max_rounds,
+                        current_gap=current_gap,
+                        counterparty_last_concession=analysis.get("counterparty_concession"),
+                    )
+                    if STRATEGIC_MODE_AVAILABLE and self.strategy
+                    else current_gap * 0.05
+                )
+                if self.role == AgentRole.SUPPLIER:
+                    params["unit_price"] = my_last_price - concession * 0.3
+                else:
+                    params["unit_price"] = my_last_price + concession * 0.3
+
+            else:
+                # Standard concede
+                if STRATEGIC_MODE_AVAILABLE and self.strategy:
+                    concession = calculate_concession_amount(
+                        strategy=self.strategy,
+                        round_number=current_round,
+                        max_rounds=max_rounds,
+                        current_gap=current_gap,
+                        counterparty_last_concession=analysis.get("counterparty_concession"),
+                    )
+                else:
+                    concession = current_gap * 0.15
+
+                # Opponent-adaptive concession scaling
+                if self.opponent_model:
+                    if self.opponent_model.opponent_type == "boulware":
+                        concession *= 0.7   # Tougher against tough opponents
+                    elif self.opponent_model.opponent_type == "conceder":
+                        concession *= 1.2   # More generous toward cooperative opponents
 
                 if self.role == AgentRole.SUPPLIER:
-                    # Supplier moves DOWN from own last price by concession amount
                     params["unit_price"] = my_last_price - concession
-                    # Never go below what counterparty is offering (take the better side)
-                    params["unit_price"] = max(params["unit_price"], zopa_min)
                 else:
-                    # Retailer moves UP from own last price by concession amount
                     params["unit_price"] = my_last_price + concession
-                    params["unit_price"] = min(params["unit_price"], zopa_max)
-            else:
-                # Fallback
-                params["unit_price"] = (zopa_min + zopa_max) / 2
-        
-        # Clamp to limits
-        if self.role == AgentRole.SUPPLIER:
-            params["unit_price"] = max(params["unit_price"], self.limits.min_price or 0)
-        else:
-            params["unit_price"] = min(params["unit_price"], self.limits.max_price or float('inf'))
-        
+
+        # ── Hard own-limit clamp (never go past own floor/ceiling) ─────────
+        if self.role == AgentRole.SUPPLIER and self.limits.min_price:
+            params["unit_price"] = max(params["unit_price"], self.limits.min_price)
+        elif self.role == AgentRole.RETAILER and self.limits.max_price:
+            params["unit_price"] = min(params["unit_price"], self.limits.max_price)
+
         params["unit_price"] = round(params["unit_price"], 2)
-        
-        # VOLUME CALCULATION
-        if counterparty_last_offer:
-            params["volume"] = counterparty_last_offer.volume
-        else:
-            # Default to middle of acceptable range
-            min_vol = self.limits.min_volume or 1000
-            max_vol = self.limits.max_volume or min_vol * 2
-            params["volume"] = (min_vol + max_vol) // 2
-        
-        # DELIVERY CALCULATION
-        if counterparty_last_offer:
-            params["delivery_days"] = counterparty_last_offer.delivery_days
-        else:
-            params["delivery_days"] = 14  # Standard 2 weeks
-        
-        # PAYMENT TERMS
-        if counterparty_last_offer:
-            params["payment_terms"] = counterparty_last_offer.payment_terms
-        else:
-            acceptable_terms = self.limits.acceptable_payment_terms or ["Net 30"]
-            params["payment_terms"] = acceptable_terms[0]
-        
-        # TRADE-OFF LOGIC (if proposed)
-        if tactic.get("propose_tradeoff") and counterparty_last_offer:
-            # Example: Offer faster delivery for slight price increase
-            if self.role == AgentRole.SUPPLIER:
-                params["delivery_days"] = max(7, params["delivery_days"] - 3)
-                params["unit_price"] += 0.50  # Small premium for speed
-            else:
-                # Retailer: Accept higher price for better terms
-                params["payment_terms"] = "Net 60"  # Request extended terms
-                params["unit_price"] += 0.30  # Willing to pay slightly more
-        
-        logger.debug(f"Calculated offer params: {params}")
+
+        # ── Data-driven defaults ───────────────────────────────────────────
+        _pd = self.product_data or {}
+        _lead = _pd.get("lead_time_days", 14)
+        _pay = _pd.get("default_payment_terms", "Net 30")
+        _min_vol = _pd.get("min_order_quantity") or self.limits.min_volume or 500
+        _max_vol = _pd.get("max_monthly_capacity") or self.limits.max_volume or (_min_vol * 4)
+
+        params["volume"] = (
+            counterparty_last_offer.volume
+            if counterparty_last_offer
+            else (_min_vol + _max_vol) // 2
+        )
+        params["delivery_days"] = (
+            counterparty_last_offer.delivery_days
+            if counterparty_last_offer
+            else _lead
+        )
+        acceptable = self.limits.acceptable_payment_terms
+        params["payment_terms"] = (
+            counterparty_last_offer.payment_terms
+            if counterparty_last_offer
+            else (acceptable[0] if acceptable else _pay)
+        )
+
+        # ── Trade-off adjustments ──────────────────────────────────────────
+        if tactic.get("propose_tradeoff") or params.get("_tradeoff_active"):
+            if counterparty_last_offer:
+                if self.role == AgentRole.SUPPLIER:
+                    params["delivery_days"] = max(3, _lead - 3, params["delivery_days"] - 3)
+                else:
+                    params["payment_terms"] = "Net 60"
+                    params["volume"] = min(
+                        self.limits.max_volume or _max_vol,
+                        int(params["volume"] * 1.10),
+                    )
+
         return params
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE 4: GENERATE - LLM Creates Justification
-    # ═══════════════════════════════════════════════════════════════════════════
-    
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 4: GENERATE — LLM justification
+    # ─────────────────────────────────────────────────────────────────────────
+
     def _generate_justification(
         self,
         offer_params: dict,
         tactic: dict,
         analysis: dict,
         counterparty_last_offer: Optional[NegotiationOffer],
-    ) -> tuple[str, Optional[str]]:
-        """
-        Phase 4: GENERATE - LLM creates human-readable justification.
-        
-        Returns:
-            (justification_text, leverage_used)
-        """
-        # Build prompt for LLM
+    ) -> Tuple[str, Optional[str]]:
         role_name = "supplier" if self.role == AgentRole.SUPPLIER else "retailer"
-        
-        prompt = f"""You are a B2B {role_name} in a negotiation for {self.product_name}.
+        tactic_type = tactic.get("tactic", "concede")
 
-Your calculated offer is:
-- Price: {offer_params['unit_price']:.2f} EUR
+        opp_snippet = ""
+        if self.opponent_model and self.opponent_model.opponent_type != "unknown":
+            opp_snippet = (
+                f"\nNote: Counterparty appears to be a "
+                f"{self.opponent_model.opponent_type.upper()} negotiator "
+                f"({self.opponent_model.last_sentiment} tone)."
+            )
+
+        prompt = f"""You are a professional B2B {role_name} justifying an offer for: {self.product_name}
+
+YOUR OFFER:
+- Price: €{offer_params['unit_price']:.2f}
 - Volume: {offer_params['volume']} units
 - Delivery: {offer_params['delivery_days']} days
 - Payment: {offer_params['payment_terms']}
 
-Context:
-- You conceded {tactic['concession_amount']:.2f} EUR this round
-- Gap remaining: {analysis['current_price_gap']:.2f} EUR ({analysis['gap_percentage']:.1f}%)
-- Urgency: {analysis['urgency_level']}
-"""
-        
+CONTEXT:
+- Tactic: {tactic_type} — {tactic.get('tactic_reason', '')}
+- Phase: {analysis.get('phase', 'bargaining').upper()}, urgency={analysis['urgency_level']}
+- Gap remaining: €{analysis['current_price_gap']:.2f}{opp_snippet}"""
+
         if counterparty_last_offer:
-            counterparty = "retailer" if self.role == AgentRole.SUPPLIER else "supplier"
-            prompt += f"\nCounterparty's last offer: €{counterparty_last_offer.unit_price:.2f}"
-        
+            prompt += f"\nCounterparty's last: €{counterparty_last_offer.unit_price:.2f}"
+
         if tactic.get("use_leverage"):
-            prompt += f"\n\nUse this leverage: {tactic['use_leverage'].value}"
-        
-        prompt += """\n\nWrite a professional, concise justification (2-3 sentences) for this offer.
-Be specific about the business value and reasoning.
-Output only the justification text, nothing else."""
-        
+            prompt += f"\n\nLEVERAGE to use: {tactic['use_leverage']} — weave it naturally."
+
+        tactic_hints = {
+            "hold_firm": "Explain firmly but professionally why you cannot move further on price.",
+            "split_difference": "Propose splitting the difference as a fair compromise.",
+            "final_offer": "Signal clearly this is your best offer.",
+            "walk_away_threat": "Hint professionally that you have other options.",
+            "conditional": "Frame the offer as conditional on a specific counterparty commitment.",
+            "tradeoff": "Explain the non-price improvements you're offering.",
+            "creative_bundle": "Propose a creatively restructured package.",
+        }
+        hint = tactic_hints.get(tactic_type, "")
+        if hint:
+            prompt += f"\n\nINSTRUCTION: {hint}"
+
+        prompt += "\n\nWrite a professional, concise justification (2-3 sentences). Output ONLY the text."
+
         try:
             justification = self.llm_client.generate(
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.6,
-            ).strip()
-            
-            # Clean up
-            if justification.startswith('"') and justification.endswith('"'):
-                justification = justification[1:-1]
-            
-            leverage_used = tactic.get("use_leverage")
-            leverage_str = leverage_used.value if leverage_used else None
-            
-            return justification, leverage_str
-            
+                temperature=0.65,
+            ).strip().strip('"')
+            return justification, tactic.get("use_leverage")
         except Exception as e:
-            logger.warning(f"Failed to generate justification: {e}")
-            # Fallback
+            logger.warning(f"Justification generation failed: {e}")
             return (
-                f"Adjusted offer to {offer_params['unit_price']:.2f} EUR based on market conditions.",
-                None
+                f"Adjusted offer to €{offer_params['unit_price']:.2f} based on current market conditions.",
+                None,
             )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE 5: VALIDATE - Self-Reflection & Constraint Check
-    # ═══════════════════════════════════════════════════════════════════════════
-    
-    def _validate_offer(
-        self,
-        offer: NegotiationOffer,
-    ) -> tuple[bool, str]:
-        """
-        Phase 5: VALIDATE - Self-reflection and constraint checking.
-        
-        Returns:
-            (is_valid, error_message)
-        """
-        # Hard constraint validation
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 5: VALIDATE
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _validate_offer(self, offer: NegotiationOffer) -> Tuple[bool, str]:
         if self.role == AgentRole.SUPPLIER:
             if self.limits.min_price and offer.unit_price < self.limits.min_price:
-                return False, f"Price {offer.unit_price:.2f} below minimum {self.limits.min_price:.2f}"
-            
+                offer.unit_price = self.limits.min_price
+                return True, f"Auto-corrected to min_price={self.limits.min_price:.2f}"
             if self.limits.min_volume and offer.volume < self.limits.min_volume:
-                return False, f"Volume {offer.volume} below minimum {self.limits.min_volume}"
-            
+                return False, f"Volume {offer.volume} below min {self.limits.min_volume}"
             if self.limits.max_volume and offer.volume > self.limits.max_volume:
                 return False, f"Volume {offer.volume} exceeds capacity {self.limits.max_volume}"
         else:
             if self.limits.max_price and offer.unit_price > self.limits.max_price:
-                return False, f"Price {offer.unit_price:.2f} exceeds maximum {self.limits.max_price:.2f}"
-            
+                offer.unit_price = self.limits.max_price
+                return True, f"Auto-corrected to max_price={self.limits.max_price:.2f}"
             if self.limits.max_delivery_days and offer.delivery_days > self.limits.max_delivery_days:
-                return False, f"Delivery {offer.delivery_days} exceeds limit {self.limits.max_delivery_days}"
-        
-        # Payment terms validation
+                return False, f"Delivery {offer.delivery_days}d exceeds limit {self.limits.max_delivery_days}d"
+
         if self.limits.acceptable_payment_terms:
             if offer.payment_terms not in self.limits.acceptable_payment_terms:
-                # Auto-fix to first acceptable term
                 offer.payment_terms = self.limits.acceptable_payment_terms[0]
-        
+
         return True, "Valid"
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # BUILD REASONING (for Agentic 2.0 transparency)
-    # ═══════════════════════════════════════════════════════════════════════════
-    
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BUILD REASONING
+    # ─────────────────────────────────────────────────────────────────────────
+
     def _build_reasoning(
         self,
         analysis: dict,
         tactic: dict,
         offer: NegotiationOffer,
-        zopa_min: float,
-        zopa_max: float,
     ) -> AgentReasoning:
-        """
-        Build AgentReasoning object for frontend transparency.
-        
-        This captures what the agent "thought" during the 5 phases.
-        """
-        # Calculate utility (if available)
-        own_utility = 0.5  # Default fallback
-        estimated_counterparty_utility = None
-        
+        """Build AgentReasoning using own-limits knowledge only."""
+        own_utility = 0.5
         if STRATEGIC_MODE_AVAILABLE and self.preferences:
             try:
-                utility_result = calculate_utility(
+                res = calculate_utility(
                     preferences=self.preferences,
                     price=offer.unit_price,
                     volume=offer.volume,
                     delivery_days=offer.delivery_days,
                     payment_terms=offer.payment_terms,
                 )
-                own_utility = utility_result.total_utility
-            except Exception as e:
-                logger.warning(f"Failed to calculate utility: {e}")
-        
-        # Calculate convergence progress
-        zopa_width = zopa_max - zopa_min
-        if zopa_width > 0:
-            # How far into ZOPA are we?
+                own_utility = res.total_utility
+            except Exception:
+                pass
+
+        # Convergence progress: how far has this agent come from its opening anchor
+        # toward the counterparty? Measures own concession depth as % of own range.
+        own_range = self._own_range()
+        opening = self._own_opening_anchor()
+        if own_range > 0:
             if self.role == AgentRole.SUPPLIER:
-                progress = ((zopa_max - offer.unit_price) / zopa_width) * 100
+                # How far down from opening anchor (toward floor)?
+                conceded = max(0.0, opening - offer.unit_price)
+                max_possible = max(0.0, opening - self._own_floor())
+                convergence_progress = min(100.0, (conceded / max(max_possible, 1.0)) * 100)
             else:
-                progress = ((offer.unit_price - zopa_min) / zopa_width) * 100
-            convergence_progress = min(100.0, max(0.0, progress))
+                # How far up from opening anchor (toward ceiling)?
+                conceded = max(0.0, offer.unit_price - opening)
+                max_possible = max(0.0, self._own_ceiling() - opening)
+                convergence_progress = min(100.0, (conceded / max(max_possible, 1.0)) * 100)
         else:
             convergence_progress = 0.0
-        
-        # Build reasoning steps
+
+        strategy_name = (
+            self.strategy.concession_pattern.value.upper()
+            if self.strategy else "LINEAR"
+        )
+        tactic_name = tactic.get("tactic", "concede")
+
+        opp_insight = (
+            f" Opponent: {self.opponent_model.opponent_type}."
+            if self.opponent_model and self.opponent_model.opponent_type != "unknown"
+            else ""
+        )
+
         reasoning_steps = [
             ReasoningStep(
                 phase="THINK",
-                observation=f"Price gap: €{analysis['current_price_gap']:.2f}, {analysis['rounds_remaining']} rounds left",
-                reasoning=f"Urgency level: {analysis['urgency_level']}, {'stuck' if analysis['is_stuck'] else 'progressing'}",
-                conclusion=f"Need to {'close quickly' if analysis['urgency_level'] in ['high', 'critical'] else 'negotiate steadily'}"
+                observation=f"Gap: €{analysis['current_price_gap']:.2f} | {analysis['rounds_remaining']} rounds left | phase={analysis.get('phase', 'unknown')}",
+                reasoning=f"Urgency={analysis['urgency_level']}, stuck={analysis['is_stuck']}{opp_insight}",
+                conclusion=f"Phase-appropriate action: {analysis.get('phase', 'bargaining')}",
             ),
             ReasoningStep(
                 phase="STRATEGIZE",
-                observation=f"Selected {self.strategy.concession_pattern.value if self.strategy else 'LINEAR'} strategy",
-                reasoning=f"Will concede €{tactic['concession_amount']:.2f} this round",
-                conclusion=f"Action: {tactic['recommended_action']}"
+                observation=f"LLM selected tactic: {tactic_name}",
+                reasoning=tactic.get("tactic_reason", "LLM-driven decision"),
+                conclusion=f"Recommended action: {tactic.get('recommended_action', 'concede')}",
             ),
             ReasoningStep(
                 phase="CALCULATE",
-                observation=f"Computed price: €{offer.unit_price:.2f}",
-                reasoning=f"Within limits, utility score: {own_utility:.2f}",
-                conclusion="Offer is valid and strategic"
+                observation=f"Price: €{offer.unit_price:.2f} | utility={own_utility:.2f}",
+                reasoning=f"Calculation based on own limits + {strategy_name} strategy",
+                conclusion="Offer parameters validated",
             ),
         ]
-        
-        if tactic.get("use_leverage"):
-            reasoning_steps.append(
-                ReasoningStep(
-                    phase="GENERATE",
-                    observation=f"Using leverage: {tactic['use_leverage'].value if hasattr(tactic['use_leverage'], 'value') else tactic['use_leverage']}",
-                    reasoning="Strengthen position with business value argument",
-                    conclusion="Justification crafted"
-                )
-            )
-        
-        # Determine strategy name
-        strategy_name = "LINEAR"
-        if self.strategy:
-            strategy_name = self.strategy.concession_pattern.value.upper()
-        
-        # Determine tactic name
-        tactic_name = tactic.get("recommended_action", "concession")
-        
-        # Build summary
-        strategy_desc = f"Using {strategy_name} concession strategy"
-        concession_desc = f", conceded €{abs(tactic['concession_amount']):.2f}" if tactic['concession_amount'] else ""
-        leverage_desc = f", leveraging {offer.leverage_used}" if offer.leverage_used else ""
-        
-        summary = f"{strategy_desc}{concession_desc}{leverage_desc}"
-        
-        # Context factors
+
         context_factors = []
-        if analysis['urgency_level'] in ['high', 'critical']:
+        if analysis["urgency_level"] in ("high", "critical"):
             context_factors.append("time_pressure")
-        if analysis['is_stuck']:
+        if analysis["is_stuck"]:
             context_factors.append("negotiation_stalled")
         if tactic.get("propose_tradeoff"):
             context_factors.append("multi_attribute_trade")
-        if analysis['gap_percentage'] < 5:
+        if analysis["gap_percentage"] < 5:
             context_factors.append("near_agreement")
-        
+
         return AgentReasoning(
             strategy_used=strategy_name,
             tactic=tactic_name,
             own_utility=own_utility,
-            estimated_counterparty_utility=estimated_counterparty_utility,
-            concession_amount_eur=tactic['concession_amount'],
-            concession_percentage=(tactic['concession_amount'] / analysis['current_price_gap'] * 100) if analysis['current_price_gap'] > 0 else 0.0,
+            estimated_counterparty_utility=None,
+            concession_amount_eur=tactic.get("concession_amount", 0.0) or 0.0,
+            concession_percentage=(
+                (tactic.get("concession_amount", 0.0) or 0.0) / analysis["current_price_gap"] * 100
+                if analysis["current_price_gap"] > 0 else 0.0
+            ),
             convergence_progress=convergence_progress,
-            gap_remaining_eur=analysis['current_price_gap'],
+            gap_remaining_eur=analysis["current_price_gap"],
             leverage_used=offer.leverage_used,
             context_factors=context_factors,
             reasoning_steps=reasoning_steps,
-            summary=summary,
+            summary=(
+                f"[{strategy_name}] {tactic_name}: €{offer.unit_price:.2f} — "
+                f"utility={own_utility:.2f}, gap=€{analysis['current_price_gap']:.2f}"
+            ),
         )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
+
+    # ─────────────────────────────────────────────────────────────────────────
     # MAIN ENTRY POINT
-    # ═══════════════════════════════════════════════════════════════════════════
-    
+    # ─────────────────────────────────────────────────────────────────────────
+
     def generate_counteroffer(
         self,
         current_round: int,
-        history: list[NegotiationRound],
+        history: list,
         counterparty_last_offer: Optional[NegotiationOffer],
-        zopa_min: float,
-        zopa_max: float,
-        max_rounds: int = 10,
+        max_rounds: int = 50,
     ) -> Tuple[NegotiationOffer, AgentReasoning]:
         """
         Generate next counteroffer using 5-phase strategic process.
-        
+
+        No ZOPA parameters — decisions based purely on own limits.
+
         Flow:
-        1. THINK: Analyze situation
-        2. STRATEGIZE: Select tactics
-        3. CALCULATE: Compute offer parameters
-        4. GENERATE: LLM creates justification
-        5. VALIDATE: Self-reflection
-        
-        Returns:
-            NegotiationOffer
+        1. UPDATE: Refresh opponent model
+        2. ACCEPT CHECK: Should we accept counterparty's offer?
+        3. THINK → STRATEGIZE → CALCULATE → GENERATE → VALIDATE
         """
-        logger.info(
-            f"[{self.role.value}] Generating counteroffer for round {current_round}"
-        )
-        
-        # PHASE 1: THINK
+        logger.info(f"[{self.role.value}] Round {current_round}: generating offer")
+
+        # ── 1. Update opponent model ───────────────────────────────────────
+        if self.opponent_model and history:
+            self.opponent_model.update(history)
+
+        # ── 2. Acceptance check ────────────────────────────────────────────
+        if counterparty_last_offer and current_round > 1:
+            should_accept, accept_reason = self.should_accept_offer(
+                counterparty_offer=counterparty_last_offer,
+                current_round=current_round,
+                max_rounds=max_rounds,
+                history=history,
+            )
+            if should_accept:
+                acceptance_offer = NegotiationOffer(
+                    unit_price=counterparty_last_offer.unit_price,
+                    volume=counterparty_last_offer.volume,
+                    delivery_days=counterparty_last_offer.delivery_days,
+                    payment_terms=counterparty_last_offer.payment_terms,
+                    justification=f"[ACCEPTED] {accept_reason}",
+                    leverage_used="acceptance",
+                )
+                reasoning = AgentReasoning(
+                    strategy_used=self.strategy.concession_pattern.value.upper() if self.strategy else "LINEAR",
+                    tactic="accept",
+                    own_utility=0.8,
+                    convergence_progress=100.0,
+                    gap_remaining_eur=0.0,
+                    summary=f"Autonomous acceptance: {accept_reason}",
+                    context_factors=["autonomous_acceptance"],
+                    reasoning_steps=[
+                        ReasoningStep(
+                            phase="THINK",
+                            observation=f"Counterparty offered €{counterparty_last_offer.unit_price:.2f}",
+                            reasoning=accept_reason,
+                            conclusion="Accept — utility threshold met",
+                        )
+                    ],
+                )
+                return acceptance_offer, reasoning
+
+        # ── 3. THINK ───────────────────────────────────────────────────────
         analysis = self._analyze_situation(
             current_round=current_round,
             max_rounds=max_rounds,
             history=history,
             counterparty_last_offer=counterparty_last_offer,
-            zopa_min=zopa_min,
-            zopa_max=zopa_max,
         )
-        
-        # PHASE 2: STRATEGIZE
-        tactic = self._select_tactic(
+
+        # ── 4. STRATEGIZE ──────────────────────────────────────────────────
+        tactic = self._select_tactic_with_llm(
             analysis=analysis,
             current_round=current_round,
             max_rounds=max_rounds,
+            counterparty_last_offer=counterparty_last_offer,
         )
-        
-        # PHASE 3: CALCULATE
+
+        # ── 5. CALCULATE ───────────────────────────────────────────────────
         offer_params = self._calculate_offer_params(
             tactic=tactic,
             counterparty_last_offer=counterparty_last_offer,
             current_round=current_round,
-            zopa_min=zopa_min,
-            zopa_max=zopa_max,
             history=history,
+            analysis=analysis,
+            max_rounds=max_rounds,
         )
-        
-        # PHASE 4: GENERATE
+
+        # ── 6. GENERATE ────────────────────────────────────────────────────
         justification, leverage_used = self._generate_justification(
             offer_params=offer_params,
             tactic=tactic,
             analysis=analysis,
             counterparty_last_offer=counterparty_last_offer,
         )
-        
-        # Create offer object
+
         offer = NegotiationOffer(
             unit_price=offer_params["unit_price"],
             volume=offer_params["volume"],
@@ -669,30 +894,21 @@ Output only the justification text, nothing else."""
             justification=justification,
             leverage_used=leverage_used,
         )
-        
-        # PHASE 5: VALIDATE
-        is_valid, error_msg = self._validate_offer(offer)
-        
+
+        # ── 7. VALIDATE ────────────────────────────────────────────────────
+        is_valid, msg = self._validate_offer(offer)
         if not is_valid:
-            logger.error(f"Generated offer failed validation: {error_msg}")
-            # Apply correction and retry (simplified - in production would iterate)
+            logger.warning(f"[{self.role.value}] Validation failed: {msg} — applying clamp")
             if self.role == AgentRole.SUPPLIER and self.limits.min_price:
                 offer.unit_price = max(offer.unit_price, self.limits.min_price)
             elif self.role == AgentRole.RETAILER and self.limits.max_price:
                 offer.unit_price = min(offer.unit_price, self.limits.max_price)
-        
+
         logger.info(
-            f"[{self.role.value}] Generated offer: €{offer.unit_price:.2f}, "
-            f"{offer.volume} units, {offer.delivery_days}d, {offer.payment_terms}"
+            f"[{self.role.value}] Offer: €{offer.unit_price:.2f} | "
+            f"{offer.volume}u | {offer.delivery_days}d | {offer.payment_terms} | "
+            f"tactic={tactic.get('tactic')}"
         )
-        
-        # Build AgentReasoning for transparency
-        reasoning = self._build_reasoning(
-            analysis=analysis,
-            tactic=tactic,
-            offer=offer,
-            zopa_min=zopa_min,
-            zopa_max=zopa_max,
-        )
-        
+
+        reasoning = self._build_reasoning(analysis=analysis, tactic=tactic, offer=offer)
         return offer, reasoning

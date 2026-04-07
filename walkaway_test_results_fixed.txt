@@ -1,0 +1,350 @@
+12:38:21 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=1024
+12:38:21 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Negotiation started — limit overlap=False [no overlap: supplier_min=130.0, retailer_max=100.0]
+12:38:21 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 1 - retailer's turn
+12:38:21 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:38:21 | INFO    | agents.negotiation_agent | [RETAILER] Round 1/15 — generating offer
+12:38:21 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:38:25 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:26 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:33 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:33 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:38:33 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:33 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:37 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:37 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:38:37 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:37 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:39 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:39 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:38:39 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:39 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:41 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:41 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €95.00 × 1000 units, 14d, Net 30 | phase=anchoring, tactic=logrolling
+12:38:41 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 2 - supplier's turn
+12:38:41 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:38:41 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 2/15 — generating offer
+12:38:41 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:38:41 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:41 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:46 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:46 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:38:46 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:46 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:49 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:49 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:38:49 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:49 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:51 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:51 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:38:51 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:51 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:54 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:54 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €146.02 × 1000 units, 14d, Net 45 | phase=exploring, tactic=logrolling
+12:38:54 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 3 - retailer's turn
+12:38:54 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:38:54 | INFO    | agents.negotiation_agent | [RETAILER] Round 3/15 — generating offer
+12:38:54 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:38:54 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:54 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:38:59 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:38:59 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:38:59 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:38:59 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:01 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:01 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:39:01 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:01 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:03 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:03 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:39:03 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:03 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:06 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:06 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €96.00 × 1000 units, 14d, Net 45 | phase=exploring, tactic=logrolling
+12:39:06 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 4 - supplier's turn
+12:39:06 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:39:06 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 4/15 — generating offer
+12:39:06 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:39:06 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:06 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:11 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:11 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:39:11 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:11 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:14 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:14 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:39:14 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:14 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:16 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:16 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:39:16 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:16 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:18 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:18 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €145.02 × 1000 units, 14d, Net 45 | phase=exploring, tactic=logrolling
+12:39:18 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 5 - retailer's turn
+12:39:18 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:39:18 | INFO    | agents.negotiation_agent | [RETAILER] Round 5/15 — generating offer
+12:39:18 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:39:18 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:18 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:23 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:23 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:39:23 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:23 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:26 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:26 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:39:26 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:26 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:28 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:28 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:39:28 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:28 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:30 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:30 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €97.00 × 1200 units, 14d, Net 45 | phase=exploring, tactic=logrolling
+12:39:30 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 6 - supplier's turn
+12:39:30 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:39:30 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 6/15 — generating offer
+12:39:30 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:39:30 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:30 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:36 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:36 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:39:36 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:36 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:39 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:39 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:39:39 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:39 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:40 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:40 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:39:40 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:40 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:43 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:43 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €144.50 × 1000 units, 14d, Net 30 | phase=bargaining, tactic=logrolling
+12:39:43 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 7 - retailer's turn
+12:39:43 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:39:43 | INFO    | agents.negotiation_agent | [RETAILER] Round 7/15 — generating offer
+12:39:43 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:39:43 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:43 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:50 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:50 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:39:50 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:50 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:53 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:53 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:39:53 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:53 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:55 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:55 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:39:55 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:55 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:39:59 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:39:59 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €98.00 × 1200 units, 14d, Net 30 | phase=bargaining, tactic=logrolling
+12:39:59 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 8 - supplier's turn
+12:39:59 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:39:59 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 8/15 — generating offer
+12:39:59 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:39:59 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:39:59 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:05 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:05 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:40:05 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:05 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:07 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:07 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:40:07 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:07 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:09 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:09 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:40:09 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:09 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:10 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:10 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €141.00 × 1000 units, 14d, Net 45 | phase=bargaining, tactic=concede_small
+12:40:10 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 9 - retailer's turn
+12:40:10 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:40:10 | INFO    | agents.negotiation_agent | [RETAILER] Round 9/15 — generating offer
+12:40:10 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:40:10 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:10 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:16 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:16 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:40:16 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:16 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:20 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:20 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:40:20 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:20 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:24 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:24 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:40:24 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:24 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:26 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:26 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €97.50 × 1100 units, 14d, Net 45 | phase=bargaining, tactic=logrolling
+12:40:26 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 10 - supplier's turn
+12:40:26 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:40:26 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 10/15 — generating offer
+12:40:26 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:40:26 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:26 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:32 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:32 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:40:32 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:32 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:35 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:35 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:40:35 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:35 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:36 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:36 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:40:36 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:36 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:38 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:38 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €140.00 × 1100 units, 14d, Net 30 | phase=bargaining, tactic=logrolling
+12:40:38 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 11 - retailer's turn
+12:40:38 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:40:38 | INFO    | agents.negotiation_agent | [RETAILER] Round 11/15 — generating offer
+12:40:38 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:40:38 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:38 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:49 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:49 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:40:49 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:50 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:52 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:52 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:40:52 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:52 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:54 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:54 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:40:54 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:54 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:40:59 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:40:59 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €98.50 × 1100 units, 14d, Net 45 | phase=bargaining, tactic=logrolling
+12:40:59 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 12 - supplier's turn
+12:40:59 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:40:59 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 12/15 — generating offer
+12:40:59 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:40:59 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:40:59 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:05 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:05 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:41:05 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:05 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:07 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:07 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:41:07 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:07 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:10 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:10 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:41:10 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:10 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:13 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:13 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €139.00 × 1100 units, 14d, Net 45 | phase=bargaining, tactic=logrolling
+12:41:13 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 13 - retailer's turn
+12:41:13 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:41:13 | INFO    | agents.negotiation_agent | [RETAILER] Round 13/15 — generating offer
+12:41:13 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:41:13 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:13 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:17 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:17 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:41:17 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:17 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:21 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:21 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:41:21 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:21 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:23 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:23 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:41:23 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:23 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:25 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:25 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €97.25 × 1100 units, 14d, Net 30 | phase=bargaining, tactic=push_moderate
+12:41:25 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 14 - supplier's turn
+12:41:25 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.64, patience=0.56, risk_appetite=0.39
+12:41:25 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 14/15 — generating offer
+12:41:25 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:41:25 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:25 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:31 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:31 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:41:31 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:31 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:33 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:33 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:41:33 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:33 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:35 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:35 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:41:35 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:35 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:40 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:40 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €138.00 × 1100 units, 14d, Net 30 | phase=bargaining, tactic=logrolling
+12:41:40 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Round 15 - retailer's turn
+12:41:40 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.57, patience=0.82, risk_appetite=0.31
+12:41:40 | INFO    | agents.negotiation_agent | [RETAILER] Round 15/15 — generating offer
+12:41:40 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:41:40 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:40 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:48 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:48 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:41:48 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:48 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:50 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:50 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:41:50 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:50 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:52 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:52 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:41:52 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:52 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:54 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:54 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €97.25 × 1100 units, 14d, Net 45 | phase=bargaining, tactic=logrolling
+12:41:54 | INFO    | orchestration.simple_orchestrator | Session 557cf9c1: Max rounds reached
+12:41:54 | INFO    | orchestration.simple_orchestrator | Session dce9fb80: Negotiation started — limit overlap=True [€115.00–€120.00]
+12:41:54 | INFO    | orchestration.simple_orchestrator | Session dce9fb80: Round 1 - retailer's turn
+12:41:54 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.66, patience=0.77, risk_appetite=0.39
+12:41:54 | INFO    | agents.negotiation_agent | [RETAILER] Round 1/15 — generating offer
+12:41:54 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:41:54 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:54 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:41:59 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:41:59 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:41:59 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:41:59 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:02 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:02 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:42:02 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:02 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:03 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:03 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:42:03 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:03 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:06 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:06 | INFO    | agents.negotiation_agent | [RETAILER] Offer: €94.60 × 1000 units, 14d, Net 30 | phase=anchoring, tactic=logrolling
+12:42:06 | INFO    | orchestration.simple_orchestrator | Session dce9fb80: Round 2 - supplier's turn
+12:42:06 | INFO    | agents.negotiation_agent | NegotiationAgent [supplier] initialized — toughness=0.85, patience=0.43, risk_appetite=0.32
+12:42:06 | INFO    | agents.negotiation_agent | [SUPPLIER] Round 2/15 — generating offer
+12:42:06 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:42:06 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:06 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:11 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:11 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=400
+12:42:11 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:11 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:13 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:13 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=300
+12:42:13 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:13 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:15 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:15 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=200
+12:42:15 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:15 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.
+12:42:17 | INFO    | httpx | HTTP Request: POST https://api.ai.intprod-eu12.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d0646dc9e6303795/chat/completions?api-version=2024-12-01-preview "HTTP/1.1 200 OK"
+12:42:17 | INFO    | agents.negotiation_agent | [SUPPLIER] Offer: €124.00 × 1000 units, 14d, Net 30 | phase=exploring, tactic=logrolling
+12:42:17 | INFO    | orchestration.simple_orchestrator | Session dce9fb80: Round 3 - retailer's turn
+12:42:17 | INFO    | agents.negotiation_agent | NegotiationAgent [retailer] initialized — toughness=0.66, patience=0.77, risk_appetite=0.39
+12:42:17 | INFO    | agents.negotiation_agent | [RETAILER] Round 3/15 — generating offer
+12:42:17 | INFO    | llm.ai_core_client | AICoreClient created | model=gpt-4o | temperature=0.3 | max_tokens=500
+12:42:17 | INFO    | llm.ai_core_client | Connecting to SAP Generative AI Hub | model=gpt-4o
+12:42:17 | INFO    | llm.ai_core_client | SAP AI Core LLM ready.

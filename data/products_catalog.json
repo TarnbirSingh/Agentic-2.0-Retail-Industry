@@ -15,7 +15,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["drill", "cordless", "18V", "brushless", "professional", "connectivity"],
       "ean": "3165140982528",
-      "weight_kg": 1.7
+      "weight_kg": 1.7,
+      "complements": ["bosch-18v-battery-set", "bosch-bit-drill-set"]
     },
     {
       "product_id": "bosch-gws-18v-15",
@@ -32,7 +33,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["angle grinder", "cordless", "18V", "x-lock", "professional"],
       "ean": "3165140981842",
-      "weight_kg": 2.4
+      "weight_kg": 2.4,
+      "complements": ["bosch-18v-battery-set", "bosch-xlock-disc-set"]
     },
     {
       "product_id": "bosch-glm-50-27",
@@ -49,7 +51,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["laser", "distance meter", "measuring", "green beam", "bluetooth"],
       "ean": "3165140980647",
-      "weight_kg": 0.15
+      "weight_kg": 0.15,
+      "complements": []
     },
     {
       "product_id": "weber-spirit-e325",
@@ -66,7 +69,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["gas grill", "bbq", "3 burner", "GBS", "side burner"],
       "ean": "77924076961",
-      "weight_kg": 52.0
+      "weight_kg": 52.0,
+      "complements": ["weber-igrill3", "weber-premium-cover", "weber-gbs-insert-set"]
     },
     {
       "product_id": "weber-master-touch",
@@ -83,7 +87,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["charcoal grill", "kettle", "bbq", "GBS", "one-touch"],
       "ean": "77924074066",
-      "weight_kg": 15.0
+      "weight_kg": 15.0,
+      "complements": ["weber-premium-cover", "weber-igrill3"]
     },
     {
       "product_id": "makita-dhp486",
@@ -100,7 +105,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["drill", "combi", "cordless", "18V", "brushless", "LXT"],
       "ean": "088381660938",
-      "weight_kg": 1.8
+      "weight_kg": 1.8,
+      "complements": ["makita-18v-battery-kit"]
     },
     {
       "product_id": "makita-dga513",
@@ -117,7 +123,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["angle grinder", "cordless", "18V", "brushless", "LXT"],
       "ean": "088381713818",
-      "weight_kg": 2.2
+      "weight_kg": 2.2,
+      "complements": ["makita-18v-battery-kit"]
     },
     {
       "product_id": "gardena-silentcut",
@@ -134,7 +141,8 @@
       "default_payment_terms": "Net 30",
       "keywords": ["hedge trimmer", "cordless", "40V", "quiet", "garden"],
       "ean": "4078500049733",
-      "weight_kg": 3.1
+      "weight_kg": 3.1,
+      "complements": ["gardena-comfort-hose-30m"]
     },
     {
       "product_id": "gardena-smartsystem",
@@ -151,7 +159,8 @@
       "default_payment_terms": "Net 30",
       "keywords": ["smart", "watering", "app control", "automation", "garden"],
       "ean": "4078500055505",
-      "weight_kg": 0.8
+      "weight_kg": 0.8,
+      "complements": ["gardena-comfort-hose-30m"]
     },
     {
       "product_id": "stihl-msa-140",
@@ -168,7 +177,8 @@
       "default_payment_terms": "Net 60",
       "keywords": ["chainsaw", "cordless", "36V", "brushless", "outdoor"],
       "ean": "4044735301582",
-      "weight_kg": 2.6
+      "weight_kg": 2.6,
+      "complements": ["stihl-36v-battery-ap300"]
     },
     {
       "product_id": "stihl-fsa-57",
@@ -185,7 +195,8 @@
       "default_payment_terms": "Net 60",
       "keywords": ["trimmer", "grass", "cordless", "36V", "garden"],
       "ean": "4044735302985",
-      "weight_kg": 2.9
+      "weight_kg": 2.9,
+      "complements": ["stihl-36v-battery-ap300"]
     },
     {
       "product_id": "dewalt-dcd796",
@@ -202,7 +213,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["drill", "combi", "cordless", "18V", "XR", "brushless", "kit"],
       "ean": "5035048668030",
-      "weight_kg": 1.7
+      "weight_kg": 1.7,
+      "complements": ["dewalt-tstak-toolbox"]
     },
     {
       "product_id": "dewalt-dcg405",
@@ -219,7 +231,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["angle grinder", "cordless", "18V", "XR", "brushless"],
       "ean": "5035048677667",
-      "weight_kg": 2.3
+      "weight_kg": 2.3,
+      "complements": ["dewalt-tstak-toolbox"]
     },
     {
       "product_id": "karcher-k5-premium",
@@ -236,7 +249,8 @@
       "default_payment_terms": "Net 45",
       "keywords": ["pressure washer", "cleaning", "high pressure", "full control"],
       "ean": "4054278658148",
-      "weight_kg": 11.9
+      "weight_kg": 11.9,
+      "complements": ["karcher-surface-cleaner-t7", "karcher-foam-nozzle-set"]
     },
     {
       "product_id": "karcher-wd6-premium",
@@ -253,7 +267,236 @@
       "default_payment_terms": "Net 45",
       "keywords": ["vacuum", "wet", "dry", "multi-purpose", "workshop"],
       "ean": "4054278667393",
-      "weight_kg": 10.5
+      "weight_kg": 10.5,
+      "complements": ["karcher-surface-cleaner-t7"]
+    },
+    {
+      "product_id": "bosch-18v-battery-set",
+      "name": "Bosch Professional 18V 5.0Ah Battery 2-Pack",
+      "category": "Power Tools - Batteries & Chargers",
+      "description": "Two 18V 5.0Ah Li-Ion batteries + GAL 18V-40 fast charger, compatible with all 18V Bosch Professional tools",
+      "supplier_id": "bosch",
+      "base_price_eur": 159.00,
+      "min_price_eur": 119.00,
+      "typical_retail_price_eur": 229.99,
+      "min_order_quantity": 300,
+      "max_monthly_capacity": 8000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 45",
+      "keywords": ["battery", "18V", "charger", "5Ah", "accessory", "bosch"],
+      "ean": "3165140844819",
+      "weight_kg": 1.4,
+      "complements": ["bosch-gsr-18v-90", "bosch-gws-18v-15"],
+      "is_complement_of": ["bosch-gsr-18v-90", "bosch-gws-18v-15"]
+    },
+    {
+      "product_id": "bosch-xlock-disc-set",
+      "name": "Bosch X-LOCK Grinding & Cutting Disc Set (10-piece)",
+      "category": "Power Tools - Accessories",
+      "description": "10-piece set: 5 cutting discs + 5 grinding discs, 125mm, X-LOCK quick-change, for metal and stone",
+      "supplier_id": "bosch",
+      "base_price_eur": 28.00,
+      "min_price_eur": 18.00,
+      "typical_retail_price_eur": 42.99,
+      "min_order_quantity": 1000,
+      "max_monthly_capacity": 30000,
+      "lead_time_days": 7,
+      "default_payment_terms": "Net 30",
+      "keywords": ["cutting disc", "grinding disc", "x-lock", "accessory", "125mm", "consumable"],
+      "ean": "3165140979542",
+      "weight_kg": 0.5,
+      "complements": ["bosch-gws-18v-15"],
+      "is_complement_of": ["bosch-gws-18v-15"]
+    },
+    {
+      "product_id": "bosch-bit-drill-set",
+      "name": "Bosch 43-Piece Screwdriver Bit & Drill Set",
+      "category": "Power Tools - Accessories",
+      "description": "43-piece set with PH, PZ, TX bits, HSS drill bits, SDS adapter, in carry case",
+      "supplier_id": "bosch",
+      "base_price_eur": 24.00,
+      "min_price_eur": 15.00,
+      "typical_retail_price_eur": 39.99,
+      "min_order_quantity": 1500,
+      "max_monthly_capacity": 40000,
+      "lead_time_days": 7,
+      "default_payment_terms": "Net 30",
+      "keywords": ["bit set", "drill bit", "screwdriver", "accessory", "PH", "PZ", "consumable"],
+      "ean": "3165140864489",
+      "weight_kg": 0.3,
+      "complements": ["bosch-gsr-18v-90"],
+      "is_complement_of": ["bosch-gsr-18v-90"]
+    },
+    {
+      "product_id": "makita-18v-battery-kit",
+      "name": "Makita LXT 18V 6.0Ah Battery Kit (2-Pack + DC18RD Charger)",
+      "category": "Power Tools - Batteries & Chargers",
+      "description": "Two 18V 6.0Ah LXT batteries with dual-port DC18RD fast charger, compatible with all Makita 18V LXT",
+      "supplier_id": "makita",
+      "base_price_eur": 189.00,
+      "min_price_eur": 149.00,
+      "typical_retail_price_eur": 269.99,
+      "min_order_quantity": 250,
+      "max_monthly_capacity": 7000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 45",
+      "keywords": ["battery", "18V", "LXT", "charger", "6Ah", "accessory", "makita"],
+      "ean": "088381821827",
+      "weight_kg": 1.8,
+      "complements": ["makita-dhp486", "makita-dga513"],
+      "is_complement_of": ["makita-dhp486", "makita-dga513"]
+    },
+    {
+      "product_id": "weber-igrill3",
+      "name": "Weber iGrill 3 Bluetooth Thermometer",
+      "category": "BBQ - Accessories & Smart Devices",
+      "description": "Bluetooth meat thermometer with 4 probes, integrates into Spirit & Genesis grills, app-controlled",
+      "supplier_id": "weber",
+      "base_price_eur": 89.00,
+      "min_price_eur": 65.00,
+      "typical_retail_price_eur": 129.99,
+      "min_order_quantity": 150,
+      "max_monthly_capacity": 4000,
+      "lead_time_days": 14,
+      "default_payment_terms": "Net 45",
+      "keywords": ["thermometer", "bluetooth", "smart", "bbq", "igrill", "accessory"],
+      "ean": "77924077272",
+      "weight_kg": 0.3,
+      "complements": ["weber-spirit-e325", "weber-master-touch"],
+      "is_complement_of": ["weber-spirit-e325", "weber-master-touch"]
+    },
+    {
+      "product_id": "weber-premium-cover",
+      "name": "Weber Premium Grill Cover (Spirit/Master-Touch)",
+      "category": "BBQ - Accessories & Covers",
+      "description": "Weather-resistant premium grill cover, fits Spirit E-325 and Master-Touch 57cm, UV-protected",
+      "supplier_id": "weber",
+      "base_price_eur": 49.00,
+      "min_price_eur": 32.00,
+      "typical_retail_price_eur": 69.99,
+      "min_order_quantity": 200,
+      "max_monthly_capacity": 5000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 30",
+      "keywords": ["cover", "protection", "weather", "bbq", "accessory", "grill cover"],
+      "ean": "77924067396",
+      "weight_kg": 1.2,
+      "complements": ["weber-spirit-e325", "weber-master-touch"],
+      "is_complement_of": ["weber-spirit-e325", "weber-master-touch"]
+    },
+    {
+      "product_id": "weber-gbs-insert-set",
+      "name": "Weber GBS Grate Insert Set (Cast Iron Griddle + Wok)",
+      "category": "BBQ - Accessories & Cooking Systems",
+      "description": "Two GBS cast iron inserts: half-griddle plate and wok, compatible with all GBS grates",
+      "supplier_id": "weber",
+      "base_price_eur": 79.00,
+      "min_price_eur": 55.00,
+      "typical_retail_price_eur": 119.99,
+      "min_order_quantity": 120,
+      "max_monthly_capacity": 3000,
+      "lead_time_days": 12,
+      "default_payment_terms": "Net 30",
+      "keywords": ["gbs", "griddle", "wok", "cast iron", "insert", "accessory", "bbq"],
+      "ean": "77924081002",
+      "weight_kg": 3.4,
+      "complements": ["weber-spirit-e325", "weber-master-touch"],
+      "is_complement_of": ["weber-spirit-e325", "weber-master-touch"]
+    },
+    {
+      "product_id": "gardena-comfort-hose-30m",
+      "name": "GARDENA Comfort FLEX Hose 30m Set",
+      "category": "Garden Tools - Hoses & Fittings",
+      "description": "30m flexible garden hose with COMFORT FLEX anti-kink technology, includes hose trolley and spray gun",
+      "supplier_id": "gardena",
+      "base_price_eur": 68.00,
+      "min_price_eur": 49.00,
+      "typical_retail_price_eur": 99.99,
+      "min_order_quantity": 300,
+      "max_monthly_capacity": 6000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 30",
+      "keywords": ["hose", "garden", "watering", "30m", "spray gun", "accessory", "comfort"],
+      "ean": "4078500041065",
+      "weight_kg": 2.8,
+      "complements": ["gardena-smartsystem", "gardena-silentcut"],
+      "is_complement_of": ["gardena-smartsystem"]
+    },
+    {
+      "product_id": "stihl-36v-battery-ap300",
+      "name": "STIHL AP 300 S Battery Pack 36V",
+      "category": "Outdoor Power - Batteries",
+      "description": "36V 281Wh lithium-ion battery, compatible with all STIHL AP System tools, battery level indicator",
+      "supplier_id": "stihl",
+      "base_price_eur": 199.00,
+      "min_price_eur": 159.00,
+      "typical_retail_price_eur": 279.00,
+      "min_order_quantity": 100,
+      "max_monthly_capacity": 2500,
+      "lead_time_days": 14,
+      "default_payment_terms": "Net 60",
+      "keywords": ["battery", "36V", "AP system", "stihl", "outdoor", "accessory"],
+      "ean": "4044735268718",
+      "weight_kg": 1.5,
+      "complements": ["stihl-msa-140", "stihl-fsa-57"],
+      "is_complement_of": ["stihl-msa-140", "stihl-fsa-57"]
+    },
+    {
+      "product_id": "karcher-surface-cleaner-t7",
+      "name": "Kärcher T 7 Plus Surface Cleaner Attachment",
+      "category": "Cleaning Equipment - Accessories",
+      "description": "Surface cleaner for high-pressure washers, 280mm cleaning width, rotary jet bar, for K3-K7 series",
+      "supplier_id": "karcher",
+      "base_price_eur": 62.00,
+      "min_price_eur": 45.00,
+      "typical_retail_price_eur": 89.99,
+      "min_order_quantity": 200,
+      "max_monthly_capacity": 5000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 30",
+      "keywords": ["surface cleaner", "attachment", "pressure washer", "accessory", "karcher", "T7"],
+      "ean": "4054278110172",
+      "weight_kg": 1.1,
+      "complements": ["karcher-k5-premium", "karcher-wd6-premium"],
+      "is_complement_of": ["karcher-k5-premium"]
+    },
+    {
+      "product_id": "karcher-foam-nozzle-set",
+      "name": "Kärcher Foam Nozzle & Detergent Starter Set",
+      "category": "Cleaning Equipment - Accessories",
+      "description": "Universal foam nozzle + 2L vehicle detergent + 1L universal cleaner concentrate, for K2-K7 series",
+      "supplier_id": "karcher",
+      "base_price_eur": 35.00,
+      "min_price_eur": 22.00,
+      "typical_retail_price_eur": 54.99,
+      "min_order_quantity": 500,
+      "max_monthly_capacity": 12000,
+      "lead_time_days": 7,
+      "default_payment_terms": "Net 30",
+      "keywords": ["foam nozzle", "detergent", "cleaner", "accessory", "consumable", "karcher"],
+      "ean": "4054278490716",
+      "weight_kg": 2.5,
+      "complements": ["karcher-k5-premium"],
+      "is_complement_of": ["karcher-k5-premium"]
+    },
+    {
+      "product_id": "dewalt-tstak-toolbox",
+      "name": "DEWALT TSTAK VI Deep Tool Box System",
+      "category": "Storage & Organisation - Tool Boxes",
+      "description": "Stackable TSTAK tool storage box, deep drawer module, IP54 protection, compatible with all TSTAK connectors",
+      "supplier_id": "dewalt",
+      "base_price_eur": 55.00,
+      "min_price_eur": 38.00,
+      "typical_retail_price_eur": 79.99,
+      "min_order_quantity": 300,
+      "max_monthly_capacity": 8000,
+      "lead_time_days": 10,
+      "default_payment_terms": "Net 30",
+      "keywords": ["tool box", "storage", "TSTAK", "stackable", "dewalt", "organiser"],
+      "ean": "5035048616796",
+      "weight_kg": 2.1,
+      "complements": ["dewalt-dcd796", "dewalt-dcg405"],
+      "is_complement_of": ["dewalt-dcd796", "dewalt-dcg405"]
     }
   ]
 }

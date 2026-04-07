@@ -120,6 +120,9 @@ class NegotiationSession(BaseModel):
     supplier_limits: Optional[PartyLimits] = None
     retailer_limits: Optional[PartyLimits] = None
     
+    # Product catalog data (injected at session creation for data-driven agents)
+    product_data: Optional[dict] = None  # Full product entry from products_catalog.json
+
     # Multi-attribute preferences (NEW - for utility-based negotiation)
     supplier_preferences: Optional[dict] = None  # NegotiationPreferences as dict
     retailer_preferences: Optional[dict] = None  # NegotiationPreferences as dict
