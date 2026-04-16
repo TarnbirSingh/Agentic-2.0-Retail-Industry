@@ -19,7 +19,12 @@ except ImportError:
     pass  # python-dotenv optional — env vars must be set manually
 
 import logging
+import sys
 import time
+
+# Ensure project root is on sys.path when running from tests/
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent))
+
 import uuid
 from datetime import datetime
 

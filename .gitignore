@@ -42,3 +42,25 @@ frontend/.env.local
 # ─── Runtime Artefakte (generiert, nicht commiten) ───────────────────────────
 kpi_results.json
 kpi_prodrill.json
+
+# ─── Evaluationsergebnisse (generiert, Rohdaten) ─────────────────────────────
+evaluation/results/
+
+# ─── Debug- und Analyse-Outputs (Root-Level) ─────────────────────────────────
+*.txt
+walkaway_*.txt
+e2e_test_results.txt
+
+# ─── Benchmarks ──────────────────────────────────────────────────────────────
+.benchmarks/
+
+# ─── Jupyter ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── mypy / Typechecker ──────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+
+# ─── Ruff / Linter Cache ─────────────────────────────────────────────────────
+.ruff_cache/

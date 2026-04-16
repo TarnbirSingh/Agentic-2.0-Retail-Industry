@@ -3,7 +3,12 @@ Quick end-to-end test for NegotiationAgent (no LLM required).
 Run: python3 test_agent_e2e.py
 """
 import json
+import sys
 from unittest.mock import MagicMock
+
+# Ensure project root is on sys.path when running from tests/
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent))
+
 from models.negotiation_models import AgentRole, PartyLimits, NegotiationOffer, NegotiationRound
 from agents.simple_agent import NegotiationAgent
 

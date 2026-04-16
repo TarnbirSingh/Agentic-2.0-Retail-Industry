@@ -161,8 +161,16 @@ class SimpleOrchestrator:
             session.status_message = f"Agent failed to generate offer: {str(e)}"
             return session
 
-        # Validate offer
+        # Validate offer — clamp to own hard limits if violated
         validation = self._validate_offer(new_offer, next_role, session)
+        if not validation.is_valid:
+            logger.warning(
+                f"Session {session.session_id} Round {session.current_round}: "
+                f"Offer from {next_role.value} violated own limits: {validation.message} "
+                f"— clamping to hard limits"
+            )
+            new_offer = self._clamp_offer_to_limits(new_offer, next_role, session)
+            validation = self._validate_offer(new_offer, next_role, session)
 
         # Create round record with agent reasoning (for Agentic 2.0 transparency)
         round_record = NegotiationRound(
@@ -176,14 +184,6 @@ class SimpleOrchestrator:
 
         session.rounds.append(round_record)
         session.updated_at = datetime.now().isoformat()
-
-        if not validation.is_valid:
-            logger.warning(
-                f"Session {session.session_id} Round {session.current_round}: "
-                f"Invalid offer from {next_role.value}: {validation.message}"
-            )
-            # Don't fail immediately, let the other agent respond
-            return session
 
         # ── Autonomous acceptance detection ────────────────────────────────
         # If the agent decided to autonomously accept, the justification
@@ -267,6 +267,60 @@ class SimpleOrchestrator:
                 retailer_retail_price=session.retailer_limits.retail_price,
             )
 
+    def _clamp_offer_to_limits(
+        self,
+        offer: NegotiationOffer,
+        role: AgentRole,
+        session: NegotiationSession,
+    ) -> NegotiationOffer:
+        """
+        Clamp a generated offer to the agent's own hard limits.
+
+        Used when the LLM generates an offer that violates the agent's own
+        declared constraints (e.g. volume below MOQ, price below floor).
+        Clamping preserves CSR=1.0 without failing the negotiation.
+        """
+        limits = (
+            session.supplier_limits if role == AgentRole.SUPPLIER
+            else session.retailer_limits
+        )
+
+        price = offer.unit_price
+        volume = offer.volume
+        delivery_days = offer.delivery_days
+
+        payment_terms = offer.payment_terms
+
+        if role == AgentRole.SUPPLIER:
+            if limits.min_price and price < limits.min_price:
+                price = limits.min_price
+            if limits.min_volume and volume < limits.min_volume:
+                volume = limits.min_volume
+            if limits.max_volume and volume > limits.max_volume:
+                volume = limits.max_volume
+            if limits.acceptable_payment_terms and payment_terms not in limits.acceptable_payment_terms:
+                payment_terms = limits.acceptable_payment_terms[0]
+        else:
+            if limits.max_price and price > limits.max_price:
+                price = limits.max_price
+            if limits.min_volume and volume < limits.min_volume:
+                volume = limits.min_volume
+            if limits.max_volume and volume > limits.max_volume:
+                volume = limits.max_volume
+            if limits.max_delivery_days and delivery_days > limits.max_delivery_days:
+                delivery_days = limits.max_delivery_days
+            if limits.acceptable_payment_terms and payment_terms not in limits.acceptable_payment_terms:
+                payment_terms = limits.acceptable_payment_terms[0]
+
+        return NegotiationOffer(
+            unit_price=price,
+            volume=volume,
+            delivery_days=delivery_days,
+            payment_terms=payment_terms,
+            justification=offer.justification,
+            leverage_used=offer.leverage_used,
+        )
+
     def _check_convergence(self, session: NegotiationSession) -> bool:
         """
         Check if agents have converged to a deal.
@@ -296,6 +350,16 @@ class SimpleOrchestrator:
         price_diff = abs(supplier_offer.unit_price - retailer_offer.unit_price)
         if price_diff > 1.50:
             return False
+
+        # Guard: implied agreed price must be within both parties' hard limits.
+        # Prevents false convergence when gap < 1.50 but prices straddle the ZOPA edge.
+        avg_price = (supplier_offer.unit_price + retailer_offer.unit_price) / 2
+        if session.supplier_limits and session.supplier_limits.min_price:
+            if avg_price < session.supplier_limits.min_price:
+                return False
+        if session.retailer_limits and session.retailer_limits.max_price:
+            if avg_price > session.retailer_limits.max_price:
+                return False
 
         # Check volume compatibility (within 10%)
         volume_diff_pct = abs(supplier_offer.volume - retailer_offer.volume) / max(supplier_offer.volume, retailer_offer.volume)

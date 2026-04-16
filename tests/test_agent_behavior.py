@@ -20,6 +20,9 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+# Ensure project root is on sys.path when running from tests/
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent))
+
 from agents.aspiration_manager import AspirationManager, AspirationState
 from agents.risk_assessor import RiskAssessor, StrategyRecommendation
 from agents.opponent_model import OpponentModel

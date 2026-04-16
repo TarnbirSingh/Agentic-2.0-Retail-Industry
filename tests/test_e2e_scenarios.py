@@ -21,6 +21,9 @@ import os
 import sys
 import uuid
 import time
+
+# Ensure project root is on sys.path when running from tests/
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent))
 import logging
 from dataclasses import dataclass, field
 from typing import List, Optional

@@ -1,0 +1,538 @@
+[
+  {
+    "scenario_id": "S01",
+    "name": "Wide ZOPA — Bosch GSR 18V-90 C Akkuschrauber",
+    "category": "WIDE_ZOPA",
+    "primary_kpi": "ZU",
+    "product_id": "bosch-gsr-18v-90",
+    "product_name": "Bosch GSR 18V-90 C Professional Akkuschrauber",
+    "supplier_limits": {
+      "min_price": 130.0,
+      "max_price": 200.0,
+      "min_volume": 200,
+      "max_volume": 5000,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 175.0,
+      "min_volume": 200,
+      "max_volume": 1000,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 250.00
+    },
+    "initial_offer": {
+      "unit_price": 195.0,
+      "volume": 300,
+      "delivery_days": 14,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 130.0,
+    "zopa_max": 175.0,
+    "zopa_width_eur": 45.0,
+    "zopa_width_pct": 0.257,
+    "notes": "Baseline-Szenario: breiter Einigungskorridor (45 EUR). Misst ZOPA Utilization — wo innerhalb des Korridors einigen sich die Agenten? Erwartet wird ein stabiler Deal ohne HITL."
+  },
+  {
+    "scenario_id": "S02",
+    "name": "Wide ZOPA — Kärcher K 5 Premium Hochdruckreiniger",
+    "category": "WIDE_ZOPA",
+    "primary_kpi": "ZU",
+    "product_id": "karcher-k5-premium",
+    "product_name": "Kärcher K 5 Premium Full Control Plus Hochdruckreiniger",
+    "supplier_limits": {
+      "min_price": 250.0,
+      "max_price": 380.0,
+      "min_volume": 100,
+      "max_volume": 2000,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 340.0,
+      "min_volume": 100,
+      "max_volume": 500,
+      "max_delivery_days": 30,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.28,
+      "retail_price": 479.99
+    },
+    "initial_offer": {
+      "unit_price": 369.0,
+      "volume": 150,
+      "delivery_days": 21,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 250.0,
+    "zopa_max": 340.0,
+    "zopa_width_eur": 90.0,
+    "zopa_width_pct": 0.265,
+    "notes": "Breiter ZOPA im Mid-Ticket-Segment (90 EUR). Premium-Gerät mit hohem Retail-Preis. Misst ZU und Verhandlungseffizienz im hohen Preisbereich."
+  },
+  {
+    "scenario_id": "S03",
+    "name": "Wide ZOPA — Weber iGrill 3 Bluetooth Thermometer (C-Artikel)",
+    "category": "WIDE_ZOPA",
+    "primary_kpi": "ZU",
+    "product_id": "weber-igrill3",
+    "product_name": "Weber iGrill 3 Bluetooth Thermometer",
+    "supplier_limits": {
+      "min_price": 52.0,
+      "max_price": 85.0,
+      "min_volume": 300,
+      "max_volume": 8000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 60"]
+    },
+    "retailer_limits": {
+      "max_price": 78.0,
+      "min_volume": 500,
+      "max_volume": 2000,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.35,
+      "retail_price": 129.99
+    },
+    "initial_offer": {
+      "unit_price": 82.0,
+      "volume": 500,
+      "delivery_days": 10,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 52.0,
+    "zopa_max": 78.0,
+    "zopa_width_eur": 26.0,
+    "zopa_width_pct": 0.333,
+    "notes": "C-Artikel (Niedrigpreis-Zubehör). Breiter ZOPA relativ zum Preis (33%). Hohe Stückzahl. Testet ZU im Niedrigpreissegment mit schneller Lieferzeit."
+  },
+  {
+    "scenario_id": "S04",
+    "name": "Narrow ZOPA — Makita DHP486Z Schlagbohrschrauber",
+    "category": "NARROW_ZOPA",
+    "primary_kpi": "CSR",
+    "product_id": "makita-dhp486",
+    "product_name": "Makita DHP486Z 18V Schlagbohrschrauber",
+    "supplier_limits": {
+      "min_price": 112.0,
+      "max_price": 140.0,
+      "min_volume": 300,
+      "max_volume": 800,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 118.0,
+      "min_volume": 300,
+      "max_volume": 800,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.32,
+      "retail_price": 179.99
+    },
+    "initial_offer": {
+      "unit_price": 136.0,
+      "volume": 400,
+      "delivery_days": 14,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 112.0,
+    "zopa_max": 118.0,
+    "zopa_width_eur": 6.0,
+    "zopa_width_pct": 0.051,
+    "notes": "Stresstest CSR: nur 6 EUR Einigungskorridor. Agenten müssen präzise innerhalb enger Grenzen bleiben. Kein einziges Angebot darf die eigenen Limits verletzen."
+  },
+  {
+    "scenario_id": "S05",
+    "name": "Narrow ZOPA — Bosch X-LOCK Schleif- und Trennscheiben-Set",
+    "category": "NARROW_ZOPA",
+    "primary_kpi": "CSR",
+    "product_id": "bosch-xlock-disc-set",
+    "product_name": "Bosch X-LOCK Grinding & Cutting Disc Set",
+    "supplier_limits": {
+      "min_price": 27.5,
+      "max_price": 40.0,
+      "min_volume": 1000,
+      "max_volume": 5000,
+      "max_delivery_days": 7,
+      "acceptable_payment_terms": ["Net 30", "Net 60"]
+    },
+    "retailer_limits": {
+      "max_price": 29.0,
+      "min_volume": 1000,
+      "max_volume": 5000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 42.99
+    },
+    "initial_offer": {
+      "unit_price": 38.8,
+      "volume": 1500,
+      "delivery_days": 7,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 27.5,
+    "zopa_max": 29.0,
+    "zopa_width_eur": 1.5,
+    "zopa_width_pct": 0.052,
+    "notes": "Niedrigpreis-Consumable (27.5–29 EUR), nur 1.5 EUR Korridor (5.2% — konsistent mit Narrow-ZOPA-Definition < 6%). Hohe Volumina. Testet CSR-Präzision bei absolut kleinen Beträgen — selbst 0.30 EUR Abweichung wäre prozentual erheblich."
+  },
+  {
+    "scenario_id": "S06",
+    "name": "Narrow ZOPA — GARDENA smart Water Control Set",
+    "category": "NARROW_ZOPA",
+    "primary_kpi": "CSR",
+    "product_id": "gardena-smartsystem",
+    "product_name": "GARDENA smart Water Control Set",
+    "supplier_limits": {
+      "min_price": 82.0,
+      "max_price": 110.0,
+      "min_volume": 400,
+      "max_volume": 1200,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 87.0,
+      "min_volume": 400,
+      "max_volume": 1200,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.28,
+      "retail_price": 120.99
+    },
+    "initial_offer": {
+      "unit_price": 107.0,
+      "volume": 500,
+      "delivery_days": 14,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 82.0,
+    "zopa_max": 87.0,
+    "zopa_width_eur": 5.0,
+    "zopa_width_pct": 0.057,
+    "notes": "Smart-Home-Gartenzubehör, 5 EUR Korridor. Testet CSR im mittleren Preissegment. Drei aufeinanderfolgende Narrow-ZOPA-Szenarien S04-S06 ermöglichen Vergleich über Preisklassen."
+  },
+  {
+    "scenario_id": "S07",
+    "name": "No ZOPA (offensichtlich) — STIHL MSA 140 C-B Kettensäge",
+    "category": "NO_ZOPA_OBVIOUS",
+    "primary_kpi": "WAA_RECALL",
+    "product_id": "stihl-msa-140",
+    "product_name": "STIHL MSA 140 C-B Akku-Kettensäge",
+    "supplier_limits": {
+      "min_price": 310.0,
+      "max_price": 380.0,
+      "min_volume": 50,
+      "max_volume": 500,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 280.0,
+      "min_volume": 50,
+      "max_volume": 500,
+      "max_delivery_days": 30,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 400.0
+    },
+    "initial_offer": {
+      "unit_price": 369.0,
+      "volume": 100,
+      "delivery_days": 21,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "CONTROLLED_ABORT",
+    "zopa_exists": false,
+    "zopa_min": null,
+    "zopa_max": null,
+    "zopa_width_eur": null,
+    "zopa_width_pct": null,
+    "gap_eur": -30.0,
+    "notes": "Offensichtliche No-ZOPA: Supplier-Min (310) > Retailer-Max (280), Lücke = 30 EUR. Testet WAA-Recall: System muss zuverlässig abbrechen. Kein False Agreement erlaubt."
+  },
+  {
+    "scenario_id": "S08",
+    "name": "No ZOPA (offensichtlich) — DEWALT TSTAK VI Werkzeugkoffer",
+    "category": "NO_ZOPA_OBVIOUS",
+    "primary_kpi": "WAA_RECALL",
+    "product_id": "dewalt-tstak-toolbox",
+    "product_name": "DEWALT TSTAK VI Deep Tool Box System",
+    "supplier_limits": {
+      "min_price": 43.0,
+      "max_price": 60.0,
+      "min_volume": 200,
+      "max_volume": 2000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 36.0,
+      "min_volume": 200,
+      "max_volume": 2000,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 79.99
+    },
+    "initial_offer": {
+      "unit_price": 58.0,
+      "volume": 300,
+      "delivery_days": 10,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "CONTROLLED_ABORT",
+    "zopa_exists": false,
+    "zopa_min": null,
+    "zopa_max": null,
+    "zopa_width_eur": null,
+    "zopa_width_pct": null,
+    "gap_eur": -7.0,
+    "notes": "No-ZOPA im Niedrigpreissegment (Lücke = 7 EUR). Kleineres Ticket als S07. Testet WAA-Recall über verschiedene Preisklassen. Zwei No-ZOPA-Obvious-Szenarien für Robustheitsnachweis."
+  },
+  {
+    "scenario_id": "S09",
+    "name": "No ZOPA (Near-Miss) — Makita DGA513Z Winkelschleifer",
+    "category": "NO_ZOPA_NEAR_MISS",
+    "primary_kpi": "WAA_PRECISION",
+    "product_id": "makita-dga513",
+    "product_name": "Makita DGA513Z 18V Winkelschleifer",
+    "supplier_limits": {
+      "min_price": 128.0,
+      "max_price": 155.0,
+      "min_volume": 100,
+      "max_volume": 800,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 126.0,
+      "min_volume": 100,
+      "max_volume": 800,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.32,
+      "retail_price": 209.99
+    },
+    "initial_offer": {
+      "unit_price": 150.0,
+      "volume": 200,
+      "delivery_days": 14,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "CONTROLLED_ABORT",
+    "zopa_exists": false,
+    "zopa_min": null,
+    "zopa_max": null,
+    "zopa_width_eur": null,
+    "zopa_width_pct": null,
+    "gap_eur": -2.0,
+    "notes": "Near-Miss: nur 2 EUR Lücke (128 vs 126 EUR). Testet WAA-Precision — trotz minimaler Lücke darf kein False Agreement entstehen. Kritischstes WAA-Szenario: System muss Grenze respektieren."
+  },
+  {
+    "scenario_id": "S10",
+    "name": "No ZOPA (Near-Miss) — Kärcher T 7 Plus Flächenreiniger",
+    "category": "NO_ZOPA_NEAR_MISS",
+    "primary_kpi": "WAA_PRECISION",
+    "product_id": "karcher-surface-cleaner-t7",
+    "product_name": "Kärcher T 7 Plus Surface Cleaner Attachment",
+    "supplier_limits": {
+      "min_price": 53.0,
+      "max_price": 70.0,
+      "min_volume": 200,
+      "max_volume": 3000,
+      "max_delivery_days": 7,
+      "acceptable_payment_terms": ["Net 30", "Net 60"]
+    },
+    "retailer_limits": {
+      "max_price": 51.0,
+      "min_volume": 200,
+      "max_volume": 3000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 89.99
+    },
+    "initial_offer": {
+      "unit_price": 68.0,
+      "volume": 300,
+      "delivery_days": 7,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "CONTROLLED_ABORT",
+    "zopa_exists": false,
+    "zopa_min": null,
+    "zopa_max": null,
+    "zopa_width_eur": null,
+    "zopa_width_pct": null,
+    "gap_eur": -2.0,
+    "notes": "Near-Miss C-Artikel (53 vs 51 EUR, Lücke = 2 EUR). Pendant zu S09 im Niedrigpreissegment. Zwei Near-Miss-Szenarien ermöglichen Unterscheidung zwischen WAA-Precision über Preisklassen."
+  },
+  {
+    "scenario_id": "S11",
+    "name": "Asymmetrische Constraints — Bosch 18V Akku-Set (MOQ-Konflikt)",
+    "category": "ASYMMETRIC",
+    "primary_kpi": "CSR_WAA",
+    "product_id": "bosch-18v-battery-set",
+    "product_name": "Bosch Professional 18V 5.0Ah Battery 2-Pack",
+    "supplier_limits": {
+      "min_price": 85.0,
+      "max_price": 105.0,
+      "min_volume": 500,
+      "max_volume": 3000,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 100.0,
+      "min_volume": 100,
+      "max_volume": 300,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.28,
+      "retail_price": 229.99
+    },
+    "initial_offer": {
+      "unit_price": 102.0,
+      "volume": 600,
+      "delivery_days": 14,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "TRADE_OFF_OR_ABORT",
+    "zopa_exists": true,
+    "zopa_min": 85.0,
+    "zopa_max": 100.0,
+    "zopa_width_eur": 15.0,
+    "zopa_width_pct": 0.150,
+    "notes": "Preis-ZOPA existiert (85–100 EUR), aber MOQ-Konflikt: Supplier-Min-Vol=500 > Retailer-Max-Vol=300. Agenten entdecken Konflikt erst in der Verhandlung. Deal via Logrolling (Preis vs. Volumen) oder MAX_ROUNDS sind beide valid."
+  },
+  {
+    "scenario_id": "S12",
+    "name": "Asymmetrische Constraints — DEWALT DCD796P2 (Lieferzeit-Konflikt)",
+    "category": "ASYMMETRIC",
+    "primary_kpi": "CSR_WAA",
+    "product_id": "dewalt-dcd796",
+    "product_name": "DEWALT DCD796P2 18V Brushless Akkubohrschrauber",
+    "supplier_limits": {
+      "min_price": 140.0,
+      "max_price": 165.0,
+      "min_volume": 100,
+      "max_volume": 1000,
+      "max_delivery_days": 21,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 162.0,
+      "min_volume": 100,
+      "max_volume": 1000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.30,
+      "retail_price": 329.99
+    },
+    "initial_offer": {
+      "unit_price": 160.0,
+      "volume": 200,
+      "delivery_days": 21,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "TRADE_OFF_OR_ABORT",
+    "zopa_exists": true,
+    "zopa_min": 140.0,
+    "zopa_max": 162.0,
+    "zopa_width_eur": 22.0,
+    "zopa_width_pct": 0.135,
+    "notes": "Preis-ZOPA existiert (140–162 EUR), aber Lieferzeit-Konflikt: Supplier-Max-Delivery=21d vs. Retailer-Max=10d. Testet multidimensionale CSR. Trade-off (schnellere Lieferung gegen niedrigeren Preis) oder MAX_ROUNDS sind valid."
+  },
+  {
+    "scenario_id": "S13",
+    "name": "Volume Leverage — Kärcher Schaum-Set",
+    "category": "VOLUME_LEVERAGE",
+    "primary_kpi": "ZU",
+    "product_id": "karcher-foam-nozzle-set",
+    "product_name": "Kärcher Foam Nozzle & Detergent Starter Set",
+    "supplier_limits": {
+      "min_price": 18.0,
+      "max_price": 35.0,
+      "min_volume": 1000,
+      "max_volume": 5000,
+      "max_delivery_days": 7,
+      "acceptable_payment_terms": ["Net 30", "Net 60"]
+    },
+    "retailer_limits": {
+      "max_price": 28.0,
+      "min_volume": 1000,
+      "max_volume": 5000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.35,
+      "retail_price": 54.99
+    },
+    "initial_offer": {
+      "unit_price": 34.0,
+      "volume": 1500,
+      "delivery_days": 7,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 18.0,
+    "zopa_max": 28.0,
+    "zopa_width_eur": 10.0,
+    "zopa_width_pct": 0.357,
+    "notes": "C-Artikel mit hohem Volumenpotenzial (bis 5000 Stück). Agenten sollten Volumen-Hebel nutzen: Preiszugeständnis gegen höhere Abnahmemenge. Misst ob ZU durch Logrolling (Volumen gegen Preis) verbessert wird."
+  },
+  {
+    "scenario_id": "S14",
+    "name": "Volume Leverage — GARDENA Comfort FLEX Schlauch 30m",
+    "category": "VOLUME_LEVERAGE",
+    "primary_kpi": "ZU",
+    "product_id": "gardena-comfort-hose-30m",
+    "product_name": "GARDENA Comfort FLEX Hose 30m Set",
+    "supplier_limits": {
+      "min_price": 30.0,
+      "max_price": 55.0,
+      "min_volume": 500,
+      "max_volume": 3000,
+      "max_delivery_days": 10,
+      "acceptable_payment_terms": ["Net 30", "Net 45"]
+    },
+    "retailer_limits": {
+      "max_price": 42.0,
+      "min_volume": 500,
+      "max_volume": 3000,
+      "max_delivery_days": 14,
+      "acceptable_payment_terms": ["Net 30", "Net 45", "Net 60"],
+      "target_margin": 0.32,
+      "retail_price": 99.99
+    },
+    "initial_offer": {
+      "unit_price": 53.0,
+      "volume": 700,
+      "delivery_days": 10,
+      "payment_terms": "Net 30"
+    },
+    "expected_outcome": "DEAL",
+    "zopa_exists": true,
+    "zopa_min": 30.0,
+    "zopa_max": 42.0,
+    "zopa_width_eur": 12.0,
+    "zopa_width_pct": 0.286,
+    "notes": "Saisonales Garten-Produkt mit breitem Volumenspielraum (500–3000 Stück). Pendant zu S13 im Gartensegment. Misst Volumen-Hebel-Nutzung und ZU-Verbesserung durch Trade-offs."
+  }
+]
