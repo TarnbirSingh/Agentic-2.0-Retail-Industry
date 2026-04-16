@@ -1,0 +1,308 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 860" font-family="'72', 'SAP72', Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="1200" height="860" fill="#F5F6F7"/>
+
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" font-size="18" font-weight="bold" fill="#32363A">TradeBridge 2.0 — System Architecture</text>
+  <text x="600" y="56" text-anchor="middle" font-size="11" fill="#6A6D70">Multi-Agent B2B Negotiation System on SAP BTP</text>
+  <line x1="40" y1="65" x2="1160" y2="65" stroke="#D9D9D9" stroke-width="1"/>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LAYER 1: USER LAYER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="78" width="1120" height="120" rx="6" fill="#EBF5FB" stroke="#1B90FF" stroke-width="1.5"/>
+  <text x="56" y="96" font-size="10" font-weight="bold" fill="#1B90FF" letter-spacing="1">USER LAYER</text>
+
+  <!-- Retailer Dashboard -->
+  <rect x="60" y="104" width="200" height="80" rx="4" fill="#FFFFFF" stroke="#1B90FF" stroke-width="1.2"/>
+  <rect x="60" y="104" width="200" height="22" rx="4" fill="#1B90FF"/>
+  <rect x="60" y="118" width="200" height="8" rx="0" fill="#1B90FF"/>
+  <text x="160" y="119" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Retailer Dashboard</text>
+  <text x="160" y="141" text-anchor="middle" font-size="9" fill="#32363A">Request Creation</text>
+  <text x="160" y="153" text-anchor="middle" font-size="9" fill="#32363A">Constraint Setting</text>
+  <text x="160" y="165" text-anchor="middle" font-size="9" fill="#32363A">HITL Intervention · Deal Approval</text>
+  <text x="74" y="195" font-size="8" fill="#6A6D70">React 19 + TypeScript</text>
+
+  <!-- Supplier Dashboard -->
+  <rect x="290" y="104" width="200" height="80" rx="4" fill="#FFFFFF" stroke="#1B90FF" stroke-width="1.2"/>
+  <rect x="290" y="104" width="200" height="22" rx="4" fill="#1B90FF"/>
+  <rect x="290" y="118" width="200" height="8" rx="0" fill="#1B90FF"/>
+  <text x="390" y="119" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Supplier Dashboard</text>
+  <text x="390" y="141" text-anchor="middle" font-size="9" fill="#32363A">Offer Initiation</text>
+  <text x="390" y="153" text-anchor="middle" font-size="9" fill="#32363A">Constraint Setting</text>
+  <text x="390" y="165" text-anchor="middle" font-size="9" fill="#32363A">Session Monitoring · Approval</text>
+  <text x="304" y="195" font-size="8" fill="#6A6D70">React 19 + TypeScript</text>
+
+  <!-- Evaluation Harness -->
+  <rect x="520" y="104" width="200" height="80" rx="4" fill="#FFFFFF" stroke="#1B90FF" stroke-width="1.2"/>
+  <rect x="520" y="104" width="200" height="22" rx="4" fill="#1B90FF"/>
+  <rect x="520" y="118" width="200" height="8" rx="0" fill="#1B90FF"/>
+  <text x="620" y="119" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Evaluation Harness</text>
+  <text x="620" y="141" text-anchor="middle" font-size="9" fill="#32363A">14-Scenario Test Suite</text>
+  <text x="620" y="153" text-anchor="middle" font-size="9" fill="#32363A">KPI Export (JSON)</text>
+  <text x="620" y="165" text-anchor="middle" font-size="9" fill="#32363A">CSR · WAA · ZU · Outcome Accuracy</text>
+  <text x="534" y="195" font-size="8" fill="#6A6D70">test_evaluation_scenarios.py</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LAYER 2: API LAYER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="218" width="1120" height="90" rx="6" fill="#F0F8F0" stroke="#107E3E" stroke-width="1.5"/>
+  <text x="56" y="236" font-size="10" font-weight="bold" fill="#107E3E" letter-spacing="1">API LAYER</text>
+
+  <!-- Main API -->
+  <rect x="60" y="244" width="240" height="52" rx="4" fill="#FFFFFF" stroke="#107E3E" stroke-width="1.2"/>
+  <rect x="60" y="244" width="240" height="16" rx="4" fill="#107E3E"/>
+  <rect x="60" y="252" width="240" height="8" rx="0" fill="#107E3E"/>
+  <text x="180" y="254" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">main.py — Core REST API</text>
+  <text x="180" y="270" text-anchor="middle" font-size="8.5" fill="#32363A">GET /api/catalog · /api/partners · /api/sessions</text>
+  <text x="180" y="282" text-anchor="middle" font-size="8.5" fill="#32363A">POST /api/negotiations/initiate · /limits · /approve</text>
+
+  <!-- Live Negotiation Endpoints -->
+  <rect x="320" y="244" width="280" height="52" rx="4" fill="#FFFFFF" stroke="#107E3E" stroke-width="1.2"/>
+  <rect x="320" y="244" width="280" height="16" rx="4" fill="#107E3E"/>
+  <rect x="320" y="252" width="280" height="8" rx="0" fill="#107E3E"/>
+  <text x="460" y="254" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">live_negotiation_endpoints.py</text>
+  <text x="460" y="270" text-anchor="middle" font-size="8.5" fill="#32363A">POST /negotiate-auto · /negotiate-round</text>
+  <text x="460" y="282" text-anchor="middle" font-size="8.5" fill="#32363A">POST /intervene  (HITL: continue · adjust · abort)</text>
+
+  <!-- FastAPI badge -->
+  <rect x="80" y="290" font-size="8" fill="#107E3E" rx="3" width="60" height="13"/>
+  <text x="110" y="300" text-anchor="middle" font-size="8" fill="#FFFFFF">FastAPI · CORS</text>
+  <rect x="340" y="290" font-size="8" fill="#107E3E" rx="3" width="80" height="13"/>
+  <text x="380" y="300" text-anchor="middle" font-size="8" fill="#FFFFFF">In-Memory sessions_db</text>
+
+  <!-- Arrows USER→API -->
+  <line x1="160" y1="184" x2="160" y2="244" stroke="#1B90FF" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="390" y1="184" x2="390" y2="244" stroke="#1B90FF" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="395" y="218" font-size="8" fill="#6A6D70">REST/JSON</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LAYER 3: ORCHESTRATION LAYER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="328" width="1120" height="95" rx="6" fill="#FEF7E0" stroke="#E8A000" stroke-width="1.5"/>
+  <text x="56" y="346" font-size="10" font-weight="bold" fill="#E8A000" letter-spacing="1">ORCHESTRATION LAYER</text>
+
+  <!-- SimpleOrchestrator -->
+  <rect x="60" y="354" width="500" height="57" rx="4" fill="#FFFFFF" stroke="#E8A000" stroke-width="1.5"/>
+  <rect x="60" y="354" width="500" height="18" rx="4" fill="#E8A000"/>
+  <rect x="60" y="364" width="500" height="8" rx="0" fill="#E8A000"/>
+  <text x="310" y="366" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">SimpleOrchestrator — simple_orchestrator.py</text>
+  <text x="130" y="382" font-size="8.5" fill="#32363A">① Turn Alternation (Supplier ↔ Retailer)</text>
+  <text x="130" y="393" font-size="8.5" fill="#32363A">② Raw Offer Capture (deepcopy vor Clamping)</text>
+  <text x="370" y="382" font-size="8.5" fill="#32363A">③ Offer Clamping → hard limits</text>
+  <text x="370" y="393" font-size="8.5" fill="#32363A">④ Terminal: ACCEPTED · PENDING · FAILED · MAX_ROUNDS</text>
+
+  <!-- KPI Calculator -->
+  <rect x="580" y="354" width="260" height="57" rx="4" fill="#FFFFFF" stroke="#E8A000" stroke-width="1.2"/>
+  <rect x="580" y="354" width="260" height="18" rx="4" fill="#E8A000"/>
+  <rect x="580" y="364" width="260" height="8" rx="0" fill="#E8A000"/>
+  <text x="710" y="366" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">kpi_calculator.py</text>
+  <text x="596" y="382" font-size="8.5" fill="#32363A">CSR  ← raw_offer (vor Clamping)</text>
+  <text x="596" y="393" font-size="8.5" fill="#32363A">WAA  Precision · Recall · F1 · FAR</text>
+  <text x="596" y="404" font-size="8.5" fill="#32363A">ZU   ZOPA Utilization</text>
+
+  <!-- Personality seed note -->
+  <rect x="855" y="354" width="285" height="57" rx="4" fill="#FFFFFF" stroke="#E8A000" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="870" y="372" font-size="8.5" fill="#32363A" font-style="italic">Personality Seed:</text>
+  <text x="870" y="384" font-size="8.5" fill="#32363A">hash(session_id + role) % 2³¹</text>
+  <text x="870" y="396" font-size="8.5" fill="#32363A">→ reproduzierbares Verhalten</text>
+  <text x="870" y="408" font-size="8.5" fill="#32363A">pro Session, variiert über Sessions</text>
+
+  <!-- API→Orchestrator arrow -->
+  <line x1="310" y1="296" x2="310" y2="354" stroke="#107E3E" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LAYER 4: AGENT LAYER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="443" width="1120" height="250" rx="6" fill="#FDF0F8" stroke="#AA0808" stroke-width="1.5"/>
+  <text x="56" y="461" font-size="10" font-weight="bold" fill="#AA0808" letter-spacing="1">AGENT LAYER — negotiation_agent.py (4 LLM Calls / Round)</text>
+
+  <!-- Supplier Agent Box -->
+  <rect x="60" y="470" width="340" height="210" rx="4" fill="#FFFFFF" stroke="#AA0808" stroke-width="1.5"/>
+  <rect x="60" y="470" width="340" height="20" rx="4" fill="#AA0808"/>
+  <rect x="60" y="482" width="340" height="8" rx="0" fill="#AA0808"/>
+  <text x="230" y="484" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Supplier Agent</text>
+
+  <!-- 4 LLM Calls inside supplier -->
+  <text x="80" y="504" font-size="8.5" fill="#32363A" font-weight="bold">4 × LLM Calls pro Runde:</text>
+  <rect x="80" y="509" width="140" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="150" y="519" text-anchor="middle" font-size="8" fill="#AA0808">① Situation Analysis</text>
+  <rect x="230" y="509" width="150" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="305" y="519" text-anchor="middle" font-size="8" fill="#AA0808">② Tactic Selection</text>
+  <rect x="80" y="527" width="140" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="150" y="537" text-anchor="middle" font-size="8" fill="#AA0808">③ Offer Generation</text>
+  <rect x="230" y="527" width="150" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="305" y="537" text-anchor="middle" font-size="8" fill="#AA0808">④ Justification</text>
+
+  <!-- Sub-components supplier -->
+  <text x="80" y="558" font-size="8.5" fill="#32363A" font-weight="bold">Sub-Komponenten:</text>
+  <rect x="80" y="563" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="152" y="575" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">AspirationManager</text>
+  <text x="152" y="586" text-anchor="middle" font-size="7.5" fill="#6A6D70">Ziel · Decay · Accept?</text>
+  <rect x="235" y="563" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="307" y="575" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">RiskAssessor</text>
+  <text x="307" y="586" text-anchor="middle" font-size="7.5" fill="#6A6D70">E[Gain] / Walk-Away-Prob</text>
+  <rect x="80" y="599" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="152" y="611" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">OpponentModel</text>
+  <text x="152" y="622" text-anchor="middle" font-size="7.5" fill="#6A6D70">Boulware/Linear/Conceder</text>
+  <rect x="235" y="599" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="307" y="611" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">TradeoffEngine</text>
+  <text x="307" y="622" text-anchor="middle" font-size="7.5" fill="#6A6D70">Logrolling · Joint Value</text>
+
+  <!-- AgentReasoning -->
+  <rect x="80" y="636" width="300" height="35" rx="3" fill="#EBF5FB" stroke="#1B90FF" stroke-width="0.8"/>
+  <text x="230" y="648" text-anchor="middle" font-size="8" fill="#1B90FF" font-weight="bold">AgentReasoning (Transparency)</text>
+  <text x="230" y="660" text-anchor="middle" font-size="7.5" fill="#6A6D70">THINK · STRATEGIZE · CALCULATE · GENERATE · VALIDATE</text>
+
+  <!-- Retailer Agent Box (mirror) -->
+  <rect x="430" y="470" width="340" height="210" rx="4" fill="#FFFFFF" stroke="#AA0808" stroke-width="1.5"/>
+  <rect x="430" y="470" width="340" height="20" rx="4" fill="#AA0808"/>
+  <rect x="430" y="482" width="340" height="8" rx="0" fill="#AA0808"/>
+  <text x="600" y="484" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Retailer Agent</text>
+
+  <text x="450" y="504" font-size="8.5" fill="#32363A" font-weight="bold">4 × LLM Calls pro Runde:</text>
+  <rect x="450" y="509" width="140" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="520" y="519" text-anchor="middle" font-size="8" fill="#AA0808">① Situation Analysis</text>
+  <rect x="600" y="509" width="150" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="675" y="519" text-anchor="middle" font-size="8" fill="#AA0808">② Tactic Selection</text>
+  <rect x="450" y="527" width="140" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="520" y="537" text-anchor="middle" font-size="8" fill="#AA0808">③ Offer Generation</text>
+  <rect x="600" y="527" width="150" height="14" rx="3" fill="#FDEFEF" stroke="#AA0808" stroke-width="0.8"/>
+  <text x="675" y="537" text-anchor="middle" font-size="8" fill="#AA0808">④ Justification</text>
+
+  <text x="450" y="558" font-size="8.5" fill="#32363A" font-weight="bold">Sub-Komponenten:</text>
+  <rect x="450" y="563" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="522" y="575" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">AspirationManager</text>
+  <text x="522" y="586" text-anchor="middle" font-size="7.5" fill="#6A6D70">Ziel · Decay · Accept?</text>
+  <rect x="605" y="563" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="677" y="575" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">RiskAssessor</text>
+  <text x="677" y="586" text-anchor="middle" font-size="7.5" fill="#6A6D70">E[Gain] / Walk-Away-Prob</text>
+  <rect x="450" y="599" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="522" y="611" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">OpponentModel</text>
+  <text x="522" y="622" text-anchor="middle" font-size="7.5" fill="#6A6D70">Boulware/Linear/Conceder</text>
+  <rect x="605" y="599" width="145" height="30" rx="3" fill="#FFF9F0" stroke="#E8A000" stroke-width="0.8"/>
+  <text x="677" y="611" text-anchor="middle" font-size="8" fill="#32363A" font-weight="bold">TradeoffEngine</text>
+  <text x="677" y="622" text-anchor="middle" font-size="7.5" fill="#6A6D70">Logrolling · Joint Value</text>
+
+  <rect x="450" y="636" width="300" height="35" rx="3" fill="#EBF5FB" stroke="#1B90FF" stroke-width="0.8"/>
+  <text x="600" y="648" text-anchor="middle" font-size="8" fill="#1B90FF" font-weight="bold">AgentReasoning (Transparency)</text>
+  <text x="600" y="660" text-anchor="middle" font-size="7.5" fill="#6A6D70">THINK · STRATEGIZE · CALCULATE · GENERATE · VALIDATE</text>
+
+  <!-- Constraint Validation box -->
+  <rect x="800" y="470" width="330" height="210" rx="4" fill="#FFFFFF" stroke="#AA0808" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <rect x="800" y="470" width="330" height="20" rx="4" fill="#6A6D70"/>
+  <rect x="800" y="482" width="330" height="8" rx="0" fill="#6A6D70"/>
+  <text x="965" y="484" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Domain Models — models/</text>
+
+  <rect x="818" y="498" width="290" height="26" rx="3" fill="#F5F6F7" stroke="#D9D9D9" stroke-width="0.8"/>
+  <text x="963" y="509" text-anchor="middle" font-size="8.5" fill="#32363A" font-weight="bold">negotiation_models.py</text>
+  <text x="963" y="519" text-anchor="middle" font-size="7.5" fill="#6A6D70">NegotiationSession · Round · Offer · raw_offer · PartyLimits</text>
+
+  <rect x="818" y="530" width="290" height="26" rx="3" fill="#F5F6F7" stroke="#D9D9D9" stroke-width="0.8"/>
+  <text x="963" y="541" text-anchor="middle" font-size="8.5" fill="#32363A" font-weight="bold">constraints.py</text>
+  <text x="963" y="551" text-anchor="middle" font-size="7.5" fill="#6A6D70">validate_offer_against_supplier/retailer_limits()</text>
+
+  <rect x="818" y="562" width="290" height="26" rx="3" fill="#F5F6F7" stroke="#D9D9D9" stroke-width="0.8"/>
+  <text x="963" y="573" text-anchor="middle" font-size="8.5" fill="#32363A" font-weight="bold">agent_reasoning.py</text>
+  <text x="963" y="583" text-anchor="middle" font-size="7.5" fill="#6A6D70">AgentReasoning · ReasoningStep (Explainability)</text>
+
+  <rect x="818" y="594" width="290" height="26" rx="3" fill="#F5F6F7" stroke="#D9D9D9" stroke-width="0.8"/>
+  <text x="963" y="605" text-anchor="middle" font-size="8.5" fill="#32363A" font-weight="bold">utility.py</text>
+  <text x="963" y="615" text-anchor="middle" font-size="7.5" fill="#6A6D70">AttributeWeights · NegotiationPreferences · UtilityResult</text>
+
+  <rect x="818" y="626" width="290" height="26" rx="3" fill="#F5F6F7" stroke="#D9D9D9" stroke-width="0.8"/>
+  <text x="963" y="637" text-anchor="middle" font-size="8.5" fill="#32363A" font-weight="bold">strategy.py</text>
+  <text x="963" y="647" text-anchor="middle" font-size="7.5" fill="#6A6D70">Boulware · Linear · Conceder · TacticType · Leverage</text>
+
+  <!-- Orchestrator→Agents arrows -->
+  <line x1="230" y1="411" x2="230" y2="470" stroke="#E8A000" stroke-width="1.5" marker-end="url(#arrow-gold)"/>
+  <line x1="390" y1="411" x2="600" y2="470" stroke="#E8A000" stroke-width="1.5" marker-end="url(#arrow-gold)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LAYER 5: LLM / INFRASTRUCTURE LAYER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="713" width="1120" height="110" rx="6" fill="#F0F0F0" stroke="#556B82" stroke-width="1.5"/>
+  <text x="56" y="731" font-size="10" font-weight="bold" fill="#556B82" letter-spacing="1">INFRASTRUCTURE LAYER — SAP Business Technology Platform</text>
+
+  <!-- AI Core Client -->
+  <rect x="60" y="740" width="300" height="70" rx="4" fill="#FFFFFF" stroke="#556B82" stroke-width="1.2"/>
+  <rect x="60" y="740" width="300" height="18" rx="4" fill="#556B82"/>
+  <rect x="60" y="750" width="300" height="8" rx="0" fill="#556B82"/>
+  <text x="210" y="752" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">AICoreClient — llm/ai_core_client.py</text>
+  <text x="80" y="770" font-size="8.5" fill="#32363A">SAP AI Core Gen AI Hub SDK · LangChain</text>
+  <text x="80" y="782" font-size="8.5" fill="#32363A">Model: GPT-4o · Temperature: 0.0 (deterministisch)</text>
+  <text x="80" y="794" font-size="8.5" fill="#32363A">with_temperature() · generate() · generate_text()</text>
+
+  <!-- SAP AI Core -->
+  <rect x="390" y="740" width="240" height="70" rx="4" fill="#FFFFFF" stroke="#556B82" stroke-width="1.2"/>
+  <rect x="390" y="740" width="240" height="18" rx="4" fill="#556B82"/>
+  <rect x="390" y="750" width="240" height="8" rx="0" fill="#556B82"/>
+  <text x="510" y="752" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">SAP AI Core</text>
+  <text x="510" y="771" text-anchor="middle" font-size="8.5" fill="#32363A">Deployment: d0646dc9e6303795</text>
+  <text x="510" y="783" text-anchor="middle" font-size="8.5" fill="#32363A">Resource Group: oss-llm</text>
+  <text x="510" y="795" text-anchor="middle" font-size="8.5" fill="#32363A">OAuth2 via BTP Subaccount</text>
+
+  <!-- Data Store -->
+  <rect x="660" y="740" width="240" height="70" rx="4" fill="#FFFFFF" stroke="#556B82" stroke-width="1.2"/>
+  <rect x="660" y="740" width="240" height="18" rx="4" fill="#556B82"/>
+  <rect x="660" y="750" width="240" height="8" rx="0" fill="#556B82"/>
+  <text x="780" y="752" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Data Layer</text>
+  <text x="780" y="771" text-anchor="middle" font-size="8.5" fill="#32363A">data/products_catalog.json</text>
+  <text x="780" y="783" text-anchor="middle" font-size="8.5" fill="#32363A">data/evaluation_scenarios.json</text>
+  <text x="780" y="795" text-anchor="middle" font-size="8.5" fill="#32363A">evaluation/results/eval_*.json</text>
+
+  <!-- Config -->
+  <rect x="930" y="740" width="200" height="70" rx="4" fill="#FFFFFF" stroke="#556B82" stroke-width="1.2"/>
+  <rect x="930" y="740" width="200" height="18" rx="4" fill="#556B82"/>
+  <rect x="930" y="750" width="200" height="8" rx="0" fill="#556B82"/>
+  <text x="1030" y="752" text-anchor="middle" font-size="10" font-weight="bold" fill="#FFFFFF">Config / Secrets</text>
+  <text x="1030" y="771" text-anchor="middle" font-size="8.5" fill="#32363A">.env · config/settings.py</text>
+  <text x="1030" y="783" text-anchor="middle" font-size="8.5" fill="#32363A">AICORE_CLIENT_ID/SECRET</text>
+  <text x="1030" y="795" text-anchor="middle" font-size="8.5" fill="#32363A">BASE_URL · DEPLOYMENT_ID</text>
+
+  <!-- Agent→LLM arrows -->
+  <line x1="230" y1="680" x2="210" y2="740" stroke="#AA0808" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <line x1="600" y1="680" x2="400" y2="740" stroke="#AA0808" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <text x="265" y="716" font-size="8" fill="#6A6D70">4× LLM/Round</text>
+  <line x1="360" y1="775" x2="390" y2="775" stroke="#556B82" stroke-width="1.2" marker-end="url(#arrow-gray)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- DEFS: Arrow markers -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#1B90FF"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#107E3E"/>
+    </marker>
+    <marker id="arrow-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#E8A000"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#AA0808"/>
+    </marker>
+    <marker id="arrow-gray" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#556B82"/>
+    </marker>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LEGEND -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="40" y="830" width="1120" height="22" rx="3" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1"/>
+  <rect x="52" y="836" width="12" height="10" rx="2" fill="#1B90FF"/>
+  <text x="70" y="845" font-size="8" fill="#32363A">User Interface</text>
+  <rect x="152" y="836" width="12" height="10" rx="2" fill="#107E3E"/>
+  <text x="170" y="845" font-size="8" fill="#32363A">API / REST</text>
+  <rect x="252" y="836" width="12" height="10" rx="2" fill="#E8A000"/>
+  <text x="270" y="845" font-size="8" fill="#32363A">Orchestration / KPI</text>
+  <rect x="382" y="836" width="12" height="10" rx="2" fill="#AA0808"/>
+  <text x="400" y="845" font-size="8" fill="#32363A">Agent Logic (ReAct · Aspiration · Risk)</text>
+  <rect x="582" y="836" width="12" height="10" rx="2" fill="#556B82"/>
+  <text x="600" y="845" font-size="8" fill="#32363A">SAP BTP Infrastructure</text>
+  <text x="800" y="845" font-size="8" fill="#6A6D70">No Shared ZOPA — ZOPA nur post-hoc für Evaluation berechnet</text>
+  <text x="1080" y="845" font-size="8" fill="#6A6D70">v2.0</text>
+
+</svg>

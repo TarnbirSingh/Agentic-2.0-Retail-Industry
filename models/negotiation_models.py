@@ -76,11 +76,19 @@ class NegotiationRound(BaseModel):
     """Complete round with offer and validation."""
     round_number: int
     role: AgentRole
-    offer: NegotiationOffer
+    offer: NegotiationOffer          # Clamped offer used for negotiation
+    raw_offer: Optional[NegotiationOffer] = Field(
+        default=None,
+        description=(
+            "Unmodified LLM output before clamping. "
+            "CSR evaluation MUST use this field to measure true constraint adherence. "
+            "None if no clamping occurred (offer == raw_offer)."
+        ),
+    )
     is_valid: bool
     validation_message: str = ""
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
-    
+
     # Transparency: Agent's reasoning for this round (NEW - Agentic 2.0)
     agent_reasoning: Optional[dict] = Field(
         default=None,

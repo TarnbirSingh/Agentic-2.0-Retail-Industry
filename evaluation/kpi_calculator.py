@@ -40,7 +40,10 @@ def calculate_csr(
     """
     Berechnet die Constraint Satisfaction Rate für eine Rolle in einer Session.
 
-    Prüft jedes Angebot der angegebenen Rolle gegen die harten Limits dieser Partei.
+    Verwendet `raw_offer` (unkorrigierter LLM-Output vor Clamping) falls vorhanden,
+    sonst `offer` (geclamptes Angebot). Dadurch misst CSR die tatsächliche Constraint-
+    Treue des Agenten, nicht die des Orchestrators.
+
     Gibt 1.0 zurück, wenn es keine Angebote dieser Rolle gibt (kein Verstoß möglich).
 
     Args:
@@ -56,7 +59,8 @@ def calculate_csr(
 
     valid_count = 0
     for rnd in role_rounds:
-        offer = rnd.offer
+        # Use raw_offer if available (true LLM output), fall back to offer
+        offer = rnd.raw_offer if rnd.raw_offer is not None else rnd.offer
         if role == AgentRole.SUPPLIER:
             limits = session.supplier_limits
             if limits is None:
@@ -111,7 +115,8 @@ def get_constraint_violations(
     role_rounds = [r for r in session.rounds if r.role == role]
 
     for rnd in role_rounds:
-        offer = rnd.offer
+        # Use raw_offer if available (true LLM output before clamping)
+        offer = rnd.raw_offer if rnd.raw_offer is not None else rnd.offer
         if role == AgentRole.SUPPLIER:
             limits = session.supplier_limits
             if limits is None:

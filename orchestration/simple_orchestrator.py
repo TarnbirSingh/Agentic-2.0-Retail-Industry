@@ -12,6 +12,7 @@ No shared ZOPA: each agent knows only its own limits.
 
 import logging
 import time
+from copy import deepcopy
 from datetime import datetime
 from typing import Optional
 
@@ -162,6 +163,7 @@ class SimpleOrchestrator:
             return session
 
         # Validate offer — clamp to own hard limits if violated
+        raw_offer = deepcopy(new_offer)  # preserve unmodified LLM output for CSR
         validation = self._validate_offer(new_offer, next_role, session)
         if not validation.is_valid:
             logger.warning(
@@ -171,12 +173,15 @@ class SimpleOrchestrator:
             )
             new_offer = self._clamp_offer_to_limits(new_offer, next_role, session)
             validation = self._validate_offer(new_offer, next_role, session)
+        else:
+            raw_offer = None  # no clamping occurred — raw == clamped, save space
 
         # Create round record with agent reasoning (for Agentic 2.0 transparency)
         round_record = NegotiationRound(
             round_number=session.current_round,
             role=next_role,
             offer=new_offer,
+            raw_offer=raw_offer,
             is_valid=validation.is_valid,
             validation_message=validation.message,
             agent_reasoning=agent_reasoning.dict() if agent_reasoning else None,
