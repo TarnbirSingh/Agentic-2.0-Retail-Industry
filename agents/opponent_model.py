@@ -179,9 +179,13 @@ class OpponentModel:
         """
         Classify opponent negotiation type based on concession pattern.
 
-        Boulware: concessions get smaller over time (protecting position)
-        Linear: concessions roughly equal each round
-        Conceder: concessions front-loaded (large early, smaller later)
+        Following Faratin et al. (1998) β-parameter semantics:
+          Conceder  (β > 1): front-loaded concessions — large early, shrinking later
+                              → ratio = second_half / first_half < 0.6
+          Linear    (β ≈ 1): steady, consistent concessions across all rounds
+                              → ratio ≈ 1.0
+          Boulware  (β < 1): back-loaded concessions — small early, panic-conceding near deadline
+                              → ratio = second_half / first_half > 1.4
         """
         if len(self._price_concessions) < 2:
             self.opponent_type = "unknown"
@@ -209,12 +213,12 @@ class OpponentModel:
         ratio = second_half_avg / max(first_half_avg, 0.01)
 
         if ratio < 0.6:
-            # Concessions are shrinking → Boulware (or running out of room)
-            self.opponent_type = "boulware"
+            # Concessions are shrinking over time → Conceder (front-loaded, β>1 per Faratin 1998)
+            self.opponent_type = "conceder"
             self.concession_trend = "decreasing"
         elif ratio > 1.4:
-            # Concessions are growing → Conceder (or increasing pressure)
-            self.opponent_type = "conceder"
+            # Concessions are growing over time → Boulware (back-loaded, β<1 per Faratin 1998)
+            self.opponent_type = "boulware"
             self.concession_trend = "increasing"
         else:
             # Roughly even → Linear
@@ -478,9 +482,9 @@ class OpponentModel:
 
         # Opponent classification
         type_desc = {
-            "boulware": "Tough/Boulware negotiator (small concessions, protecting position)",
+            "boulware": "Boulware negotiator (back-loaded concessions — small early, larger near deadline)",
             "linear": "Steady/Linear negotiator (consistent, predictable concessions)",
-            "conceder": "Conceder (front-loaded concessions, now slowing down)",
+            "conceder": "Conceder (front-loaded concessions — large early, now slowing down)",
             "unknown": "Still assessing opponent strategy",
         }
         lines.append(f"Opponent type: {type_desc.get(self.opponent_type, 'unknown')}")
