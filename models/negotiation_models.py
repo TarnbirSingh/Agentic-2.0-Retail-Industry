@@ -89,6 +89,16 @@ class NegotiationRound(BaseModel):
     validation_message: str = ""
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
+    # Constraint retry tracking (NEW - Agentic 2.0 Validator)
+    retry_count: int = Field(
+        default=0,
+        description=(
+            "Number of constraint-violation retries before a valid offer was accepted. "
+            "0 = first attempt was valid. >0 = agent needed N re-prompts. "
+            "Used for CSR analysis and evaluation reporting."
+        ),
+    )
+
     # Transparency: Agent's reasoning for this round (NEW - Agentic 2.0)
     agent_reasoning: Optional[dict] = Field(
         default=None,

@@ -201,6 +201,7 @@ class NegotiationAgent:
         history: list[NegotiationRound],
         counterparty_last_offer: Optional[NegotiationOffer],
         max_rounds: int,
+        constraint_violations: Optional[list[dict]] = None,
     ) -> tuple[NegotiationOffer, AgentReasoning]:
         """
         Generate the next offer using the full Agentic AI 2.0 pipeline.
@@ -287,6 +288,7 @@ class NegotiationAgent:
             risk_assessment=risk_assessment,
             tradeoff_analysis=tradeoff_analysis,
             current_round=current_round,
+            constraint_violations=constraint_violations,
         )
 
         # ── Step 9: Acceptance check ──────────────────────────────────────
@@ -897,6 +899,7 @@ Respond in JSON:
         risk_assessment: RiskAssessment,
         tradeoff_analysis: TradeoffAnalysis,
         current_round: int,
+        constraint_violations: Optional[list[dict]] = None,
     ) -> dict:
         """
         LLM Call 3: Generate concrete offer numbers.
@@ -940,6 +943,20 @@ TRADE-OFF OPTION (use if beneficial):
 Consider including this trade-off in your offer for a multi-attribute package deal.
 """
 
+        violation_block = ""
+        if constraint_violations:
+            lines = []
+            for v in constraint_violations:
+                lines.append(
+                    f"  - {v['field']}: {v['message']} "
+                    f"(you offered {v['current_value']}, limit is {v['limit_value']})"
+                )
+            violation_block = (
+                "\n=== CONSTRAINT VIOLATIONS IN YOUR PREVIOUS OFFER — FIX THESE ===\n"
+                + "\n".join(lines)
+                + "\nYou MUST correct ALL violations above. Do NOT repeat the same values.\n"
+            )
+
         prompt = f"""You are generating a concrete offer for a B2B negotiation.
 
 ROLE: {'Supplier' if self.is_supplier else 'Retailer'} for {self.product_name}
@@ -961,8 +978,7 @@ Opponent's offer: {f"€{counterparty_last_offer.unit_price:.2f} × {counterpart
 Target (aspiration): €{aspiration_state.current_aspiration:.2f}
 Walk-away limit: €{resistance:.2f}
 Suggested price: €{suggested_price:.2f} (mathematical guidance, can adjust ±5%)
-{tradeoff_instruction}
-
+{tradeoff_instruction}{violation_block}
 Tactic guidance:
 - push_aggressive: Stay very close to aspiration or above, minimal concession
 - push_moderate: Move 30-50% toward opponent from your position

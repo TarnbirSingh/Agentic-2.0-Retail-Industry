@@ -162,19 +162,49 @@ class SimpleOrchestrator:
             session.status_message = f"Agent failed to generate offer: {str(e)}"
             return session
 
-        # Validate offer — clamp to own hard limits if violated
-        raw_offer = deepcopy(new_offer)  # preserve unmodified LLM output for CSR
+        # ── Constraint Retry Loop ──────────────────────────────────────────
+        # Validate first. If invalid: re-prompt the agent (max 3 retries).
+        # Only clamp as last resort if all retries fail (system stability).
+        MAX_RETRIES = 3
+        raw_offer = deepcopy(new_offer)  # preserve very first LLM output for CSR
+        retry_count = 0
+        current_violations: Optional[list] = None
         validation = self._validate_offer(new_offer, next_role, session)
-        if not validation.is_valid:
+
+        while not validation.is_valid and retry_count < MAX_RETRIES:
+            retry_count += 1
+            current_violations = [v.dict() for v in validation.violations]
             logger.warning(
                 f"Session {session.session_id} Round {session.current_round}: "
-                f"Offer from {next_role.value} violated own limits: {validation.message} "
-                f"— clamping to hard limits"
+                f"{next_role.value} offer invalid (attempt {retry_count}/{MAX_RETRIES}): "
+                f"{validation.message} — re-prompting agent"
+            )
+            try:
+                new_offer, agent_reasoning = agent.generate_counteroffer(
+                    current_round=session.current_round,
+                    history=session.rounds,
+                    counterparty_last_offer=counterparty_last_offer,
+                    max_rounds=session.max_rounds,
+                    constraint_violations=current_violations,
+                )
+            except Exception as e:
+                logger.error(f"Retry {retry_count} for {next_role.value} failed: {e}", exc_info=True)
+                break
+            validation = self._validate_offer(new_offer, next_role, session)
+
+        # Fallback: clamp only if all retries exhausted
+        if not validation.is_valid:
+            logger.warning(
+                f"Session {session.session_id}: all {MAX_RETRIES} retries exhausted for "
+                f"{next_role.value} — clamping as last resort"
             )
             new_offer = self._clamp_offer_to_limits(new_offer, next_role, session)
             validation = self._validate_offer(new_offer, next_role, session)
-        else:
-            raw_offer = None  # no clamping occurred — raw == clamped, save space
+
+        # raw_offer only meaningful if at least one retry occurred (first attempt was invalid)
+        if retry_count == 0:
+            raw_offer = None
+        # ──────────────────────────────────────────────────────────────────
 
         # Create round record with agent reasoning (for Agentic 2.0 transparency)
         round_record = NegotiationRound(
@@ -182,6 +212,7 @@ class SimpleOrchestrator:
             role=next_role,
             offer=new_offer,
             raw_offer=raw_offer,
+            retry_count=retry_count,
             is_valid=validation.is_valid,
             validation_message=validation.message,
             agent_reasoning=agent_reasoning.dict() if agent_reasoning else None,

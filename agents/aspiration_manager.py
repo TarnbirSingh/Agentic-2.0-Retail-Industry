@@ -504,7 +504,8 @@ class AspirationManager:
         
         # Opponent concession: if opponent gave a lot, RAISE aspiration slightly
         # (signals they have more room)
-        if opponent_concession > 2.0:  # Large concession (>€2)
+        concession_threshold = 0.05 * abs(self.target_price - self.resistance_price)
+        if opponent_concession > concession_threshold:  # Large concession (>5% of negotiation range)
             # They moved a lot → we should push more
             concession_boost = min(remaining_to_min * 0.05, opponent_concession * 0.1)
             total_decay -= concession_boost  # Negative decay = aspiration stays or rises
