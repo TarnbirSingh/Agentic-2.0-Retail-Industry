@@ -345,13 +345,21 @@ def calculate_waa(scenario_results: list[dict]) -> dict:
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
-    false_agreement_rate = fn / (fn + tp) if (fn + tp) > 0 else 0.0
+    # False Agreement Rate: FP / (FP + TN)
+    #   = Anteil der ZOPA-Szenarien die fälschlich als Abbruch endeten … NEIN.
+    #   = Anteil der No-ZOPA-Szenarien die fälschlich als Deal endeten (FP = Deal bei No-ZOPA)
+    #   Formel: FP / (FP + TN) — "wie viele Deals waren falsch?"
+    false_agreement_rate = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+    # Missed Walkaway Rate: FN / (FN + TP)
+    #   = Anteil der No-ZOPA-Szenarien bei denen der Walk-Away verpasst wurde
+    missed_walkaway_rate = fn / (fn + tp) if (fn + tp) > 0 else 0.0
 
     return {
         "precision": round(precision, 4),
         "recall": round(recall, 4),
         "f1": round(f1, 4),
         "false_agreement_rate": round(false_agreement_rate, 4),
+        "missed_walkaway_rate": round(missed_walkaway_rate, 4),
         "true_positives": tp,
         "true_negatives": tn,
         "false_positives": fp,
@@ -397,7 +405,22 @@ def generate_evaluation_report(
     scenarios_out = []
     for res in all_results:
         zu = res.get("zu")
-        scenarios_out.append({
+
+        # ── Preis-Pfad und Konzessionssequenzen aus den Round-Daten ──────────
+        raw_rounds = res.get("rounds", [])
+
+        price_path = [
+            {"round": r["round_number"], "role": r["role"], "price": r["offer"]["unit_price"]}
+            for r in raw_rounds
+        ]
+
+        def concession_sequence(rounds, role):
+            offers = [r["offer"]["unit_price"] for r in rounds if r["role"] == role]
+            if len(offers) < 2:
+                return []
+            return [round(offers[i] - offers[i - 1], 4) for i in range(1, len(offers))]
+
+        scenario_report = {
             "scenario_id": res["scenario_id"],
             "name": res.get("name", ""),
             "category": res["category"],
@@ -414,7 +437,13 @@ def generate_evaluation_report(
             "zopa_position": get_zopa_position(zu),
             "constraint_violations": res.get("constraint_violations", []),
             "elapsed_sec": round(res.get("elapsed_sec", 0.0), 2),
-        })
+            # Verhandlungsverlauf
+            "price_path": price_path,
+            "supplier_concession_sequence": concession_sequence(raw_rounds, "supplier"),
+            "retailer_concession_sequence": concession_sequence(raw_rounds, "retailer"),
+            "rounds": raw_rounds,
+        }
+        scenarios_out.append(scenario_report)
 
     # ---- WAA ----
     waa = calculate_waa(all_results)
@@ -449,7 +478,8 @@ def generate_evaluation_report(
             "waa_precision": waa["precision"],
             "waa_recall": waa["recall"],
             "waa_f1": waa["f1"],
-            "false_agreement_rate": waa["false_agreement_rate"],
+            "false_agreement_rate": waa["false_agreement_rate"],    # FP/(FP+TN): Deal trotz No-ZOPA
+            "missed_walkaway_rate": waa["missed_walkaway_rate"],    # FN/(FN+TP): Walk-Away verpasst
             "zu_mean": round(zu_mean, 4) if zu_mean is not None else None,
             "zu_median": round(zu_median, 4) if zu_median is not None else None,
             "avg_rounds": round(avg_rounds, 2),

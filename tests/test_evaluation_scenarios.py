@@ -21,9 +21,11 @@ Run einzelnes Szenario:
     python3 test_evaluation_scenarios.py S03
 """
 
+import argparse
 import json
 import logging
 import os
+import statistics as _stats
 import sys
 import time
 
@@ -106,9 +108,7 @@ class EvalScenarioResult:
     failures: List[str] = field(default_factory=list)
     elapsed_sec: float = 0.0
     notes: str = ""
-
-
-ALL_RESULTS: List[EvalScenarioResult] = []
+    session: Optional[object] = field(default=None)  # NegotiationSession — für Round-Export
 
 
 def _assert(r: EvalScenarioResult, condition: bool, msg_pass: str, msg_fail: str):
@@ -320,6 +320,7 @@ def run_scenario(sc: dict, orch: SimpleOrchestrator) -> EvalScenarioResult:
         r.elapsed_sec = time.time() - t0
         r.actual_status = session.status.value
         r.rounds_used = session.current_round
+        r.session = session  # für Round-Export in export_results()
 
         if session.rounds:
             last_offer = session.rounds[-1].offer
@@ -409,7 +410,7 @@ def export_results(results: List[EvalScenarioResult], model: str = "gpt-4o"):
     # Konvertiere EvalScenarioResult → dict für den Report-Generator
     raw_dicts = []
     for r in results:
-        raw_dicts.append({
+        d = {
             "scenario_id": r.scenario_id,
             "name": r.name,
             "category": r.category,
@@ -423,7 +424,36 @@ def export_results(results: List[EvalScenarioResult], model: str = "gpt-4o"):
             "zu": r.zu,
             "constraint_violations": r.constraint_violations,
             "elapsed_sec": r.elapsed_sec,
-        })
+        }
+        # Vollständiger Verhandlungsverlauf — nur wenn session mitgeführt wurde
+        if r.session is not None and r.session.rounds:
+            d["rounds"] = [
+                {
+                    "round_number": rnd.round_number,
+                    "role": rnd.role.value,
+                    "offer": {
+                        "unit_price": rnd.offer.unit_price,
+                        "volume": rnd.offer.volume,
+                        "delivery_days": rnd.offer.delivery_days,
+                        "payment_terms": rnd.offer.payment_terms,
+                        "justification": rnd.offer.justification,
+                        "leverage_used": rnd.offer.leverage_used,
+                    },
+                    "raw_offer": {
+                        "unit_price": rnd.raw_offer.unit_price,
+                        "volume": rnd.raw_offer.volume,
+                        "delivery_days": rnd.raw_offer.delivery_days,
+                        "payment_terms": rnd.raw_offer.payment_terms,
+                    } if rnd.raw_offer is not None else None,
+                    "is_valid": rnd.is_valid,
+                    "validation_message": rnd.validation_message,
+                    "retry_count": rnd.retry_count,
+                    "agent_reasoning": rnd.agent_reasoning,  # dict oder None
+                    "timestamp": rnd.timestamp,
+                }
+                for rnd in r.session.rounds
+            ]
+        raw_dicts.append(d)
 
     report = generate_evaluation_report(raw_dicts, model=model, temperature=0.0)
 
@@ -480,7 +510,8 @@ def print_summary(results: List[EvalScenarioResult], report: dict):
     print(f"  WAA Precision:        {kpis['waa_precision']:.4f}  (TP={waa['TP']}, FP={waa['FP']})")
     print(f"  WAA Recall:           {kpis['waa_recall']:.4f}  (TP={waa['TP']}, FN={waa['FN']})")
     print(f"  WAA F1:               {kpis['waa_f1']:.4f}")
-    print(f"  False Agreement Rate: {kpis['false_agreement_rate']:.4f}  ← kritisch, muss 0.0 sein")
+    print(f"  False Agreement Rate: {kpis['false_agreement_rate']:.4f}  ← FP/(FP+TN): Deal trotz No-ZOPA, muss 0.0 sein")
+    print(f"  Missed Walkaway Rate: {kpis['missed_walkaway_rate']:.4f}  ← FN/(FN+TP): Walk-Away verpasst")
     print(f"  ZU Mean:              {kpis['zu_mean']:.4f}" if kpis['zu_mean'] is not None else "  ZU Mean:              n/a")
     print(f"  ZU Median:            {kpis['zu_median']:.4f}" if kpis['zu_median'] is not None else "  ZU Median:            n/a")
     print(f"  Ø Runden:             {kpis['avg_rounds']:.2f}")
@@ -496,14 +527,136 @@ def print_summary(results: List[EvalScenarioResult], report: dict):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# CROSS-RUN AGGREGATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+def aggregate_runs(run_reports: list[dict]) -> dict:
+    """Berechnet Cross-Run-Statistiken über alle N Run-Reports."""
+    n = len(run_reports)
+
+    def stat(values):
+        values = [v for v in values if v is not None]
+        if not values:
+            return {"mean": None, "std": None, "min": None, "max": None}
+        return {
+            "mean": round(_stats.mean(values), 4),
+            "std": round(_stats.stdev(values), 4) if len(values) > 1 else 0.0,
+            "min": round(min(values), 4),
+            "max": round(max(values), 4),
+        }
+
+    csr_values    = [r["aggregate_kpis"]["csr_overall"]          for r in run_reports]
+    waa_f1_values = [r["aggregate_kpis"]["waa_f1"]               for r in run_reports]
+    zu_values     = [r["aggregate_kpis"]["zu_mean"]              for r in run_reports]
+    acc_values    = [r["aggregate_kpis"]["outcome_accuracy"]     for r in run_reports]
+    far_values    = [r["aggregate_kpis"]["false_agreement_rate"] for r in run_reports]
+    mwr_values    = [r["aggregate_kpis"]["missed_walkaway_rate"] for r in run_reports]
+
+    # Szenario-Stabilität: wie oft war outcome_correct pro Szenario
+    scenario_stability: dict = {}
+    for report in run_reports:
+        for sc in report["scenarios"]:
+            sid = sc["scenario_id"]
+            if sid not in scenario_stability:
+                scenario_stability[sid] = {"n_correct": 0, "n_runs": 0, "outcomes": []}
+            scenario_stability[sid]["n_runs"] += 1
+            if sc.get("outcome_correct"):
+                scenario_stability[sid]["n_correct"] += 1
+            scenario_stability[sid]["outcomes"].append(sc.get("actual_status", ""))
+
+    for sid, s in scenario_stability.items():
+        s["stable"] = s["n_correct"] == s["n_runs"]
+        s["stability_rate"] = round(s["n_correct"] / s["n_runs"], 4) if s["n_runs"] > 0 else 0.0
+
+    return {
+        "n_runs": n,
+        "cross_run_statistics": {
+            "csr_overall":          stat(csr_values),
+            "waa_f1":               stat(waa_f1_values),
+            "zu_mean":              stat(zu_values),
+            "outcome_accuracy":     stat(acc_values),
+            "false_agreement_rate": stat(far_values),
+            "missed_walkaway_rate": stat(mwr_values),
+        },
+        "scenario_stability": scenario_stability,
+    }
+
+
+def export_multirun_results(multirun: dict, run_paths: list) -> Path:
+    """Exportiert Multi-Run-Aggregat als JSON."""
+    _RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    output_path = _RESULTS_DIR / f"eval_multirun_{timestamp}.json"
+
+    export = {
+        "experiment_type": "multi_run",
+        "timestamp_utc": timestamp,
+        "n_runs": multirun["n_runs"],
+        "run_files": [str(p) for p in run_paths],
+        "cross_run_statistics": multirun["cross_run_statistics"],
+        "scenario_stability": multirun["scenario_stability"],
+    }
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(export, f, indent=2, ensure_ascii=False)
+
+    logger.info(f"\n📊 Multi-Run-Report: {output_path}")
+    return output_path
+
+
+def print_multirun_summary(multirun: dict):
+    """Konsolenausgabe für Cross-Run-Statistiken."""
+    stats = multirun["cross_run_statistics"]
+    stability = multirun["scenario_stability"]
+    n = multirun["n_runs"]
+
+    print("\n" + "═" * 70)
+    print(f"MULTI-RUN ZUSAMMENFASSUNG — {n} Läufe")
+    print("═" * 70)
+
+    def fmt(s):
+        if s["mean"] is None:
+            return "n/a"
+        if s["std"] == 0.0:
+            return f"{s['mean']:.4f} (deterministisch)"
+        return f"{s['mean']:.4f} ± {s['std']:.4f}  [min={s['min']:.4f}, max={s['max']:.4f}]"
+
+    print(f"  CSR overall:          {fmt(stats['csr_overall'])}")
+    print(f"  WAA F1:               {fmt(stats['waa_f1'])}")
+    print(f"  ZU Mean:              {fmt(stats['zu_mean'])}")
+    print(f"  Outcome Accuracy:     {fmt(stats['outcome_accuracy'])}")
+    print(f"  False Agreement Rate: {fmt(stats['false_agreement_rate'])}  ← FP/(FP+TN)")
+    print(f"  Missed Walkaway Rate: {fmt(stats['missed_walkaway_rate'])}  ← FN/(FN+TP)")
+
+    print(f"\n  Szenario-Stabilität ({n} Runs):")
+    unstable = [(sid, s) for sid, s in stability.items() if not s["stable"]]
+    if not unstable:
+        print(f"  ✓ Alle Szenarien in allen {n} Runs korrekt")
+    else:
+        for sid, s in sorted(unstable):
+            print(f"  ✗ {sid}: {s['n_correct']}/{s['n_runs']} korrekt | Outcomes: {s['outcomes']}")
+
+    print("═" * 70)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
 
+# Argument-Parser auf Modul-Ebene (so kann main() ihn direkt nutzen)
+_parser = argparse.ArgumentParser(description="TradeBridge 2.0 Evaluations-Suite")
+_parser.add_argument("--runs", type=int, default=1, metavar="N",
+                     help="Anzahl Wiederholungsläufe (default=1)")
+_parser.add_argument("scenarios", nargs="*",
+                     help="Optionale Szenario-IDs, z.B. S01 S07 (default: alle)")
+
+
 def main():
-    # Optional: einzelne Szenario-IDs als Argumente (z.B. "S01 S07")
-    filter_ids: set[str] = set()
-    if len(sys.argv) > 1:
-        filter_ids = {a.upper() for a in sys.argv[1:]}
+    args = _parser.parse_args()
+    n_runs = args.runs
+    filter_ids: set[str] = {s.upper() for s in args.scenarios}
+
+    if filter_ids:
         logger.info(f"Nur Szenarien: {sorted(filter_ids)}")
 
     # LLM-Client (temperature=0.0 für Reproduzierbarkeit)
@@ -518,23 +671,53 @@ def main():
         logger.error("Keine Szenarien gefunden.")
         sys.exit(1)
 
-    logger.info(f"\nStarte Evaluation mit {len(all_scenarios)} Szenario(en)...")
+    logger.info(f"\nStarte {n_runs} Run(s) mit {len(all_scenarios)} Szenario(en)...")
     logger.info(f"Modell: gpt-4o | Temperatur: 0.0 | max_rounds: 15\n")
 
-    # Alle Szenarien ausführen
-    for sc in all_scenarios:
-        result = run_scenario(sc, orch)
-        ALL_RESULTS.append(result)
+    run_reports: list[dict] = []
+    run_paths: list[Path] = []
+    last_run_results: list[EvalScenarioResult] = []
+    total_start = time.time()
 
-    # Export
-    output_path, report = export_results(ALL_RESULTS)
+    for run_idx in range(1, n_runs + 1):
+        if n_runs > 1:
+            logger.info(f"\n{'█' * 70}")
+            logger.info(f"  RUN {run_idx} / {n_runs}")
+            logger.info(f"{'█' * 70}")
 
-    # Zusammenfassung
-    print_summary(ALL_RESULTS, report)
+        run_start = time.time()
+        run_results: list[EvalScenarioResult] = []
+        for sc in all_scenarios:
+            result = run_scenario(sc, orch)
+            run_results.append(result)
 
-    # Exit-Code: 0 wenn alle Tests bestanden, 1 sonst
-    # Achtung: No-ZOPA-Abbrüche sind kein Fehler
-    all_passed = all(r.passed for r in ALL_RESULTS)
+        run_elapsed = time.time() - run_start
+        run_min, run_sec = divmod(int(run_elapsed), 60)
+        if n_runs > 1:
+            logger.info(f"  RUN {run_idx} abgeschlossen in {run_min}m {run_sec:02d}s")
+
+        path, report = export_results(run_results)
+        print_summary(run_results, report)
+        if n_runs == 1:
+            total_elapsed = time.time() - total_start
+            t_min, t_sec = divmod(int(total_elapsed), 60)
+            print(f"  Gesamtlaufzeit: {t_min}m {t_sec:02d}s")
+        run_reports.append(report)
+        run_paths.append(path)
+        last_run_results = run_results
+
+    # Multi-Run-Aggregation (nur bei mehr als 1 Run)
+    if n_runs > 1:
+        multirun = aggregate_runs(run_reports)
+        export_multirun_results(multirun, run_paths)
+        print_multirun_summary(multirun)
+        total_elapsed = time.time() - total_start
+        t_min, t_sec = divmod(int(total_elapsed), 60)
+        print(f"\n  Gesamtlaufzeit alle {n_runs} Runs: {t_min}m {t_sec:02d}s  "
+              f"(Ø {t_min // n_runs}m {(t_sec + (t_min % n_runs) * 60) // n_runs:02d}s pro Run)")
+
+    # Exit-Code basiert auf letztem Run
+    all_passed = all(r.passed for r in last_run_results)
     sys.exit(0 if all_passed else 1)
 
 
